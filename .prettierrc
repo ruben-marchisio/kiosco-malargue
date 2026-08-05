@@ -1,0 +1,26 @@
+{
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "quoteProps": "as-needed",
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": { "printWidth": 120 }
+    },
+    {
+      "files": "*.css",
+      "options": { "singleQuote": false }
+    },
+    {
+      "files": "*.sql",
+      "options": { "parser": "sql" }
+    }
+  ]
+}

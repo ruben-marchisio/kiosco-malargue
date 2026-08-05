@@ -1,0 +1,25 @@
+{
+  "name": "kiosco-malargue",
+  "version": "1.0.0",
+  "description": "PWA Kiosco Digital — Colonia Hípica, Malargüe, Mendoza",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
+    "lint": "eslint js/ admin/js/",
+    "check": "prettier --check \"**/*.{js,html,css,json,md}\"",
+    "deploy": "git add -A && git commit -m '🚀 deploy' && git push"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruben-marchisio/kiosco-malargue.git"
+  },
+  "author": "Ruben Marchisio",
+  "license": "ISC",
+  "homepage": "https://kiosco-malargue.rubenmarchisio-4e3.workers.dev",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "prettier": "^3.9.6"
+  }
+}

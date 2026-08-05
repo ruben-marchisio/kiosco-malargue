@@ -8,38 +8,38 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const CATS = [
-  { id: 'todo',       label: 'Todo',       emoji: '🛍️' },
-  { id: 'bebidas',    label: 'Bebidas',    emoji: '🥤' },
-  { id: 'snacks',     label: 'Snacks',     emoji: '🍫' },
-  { id: 'comidas',    label: 'Comidas',    emoji: '🍽️' },
-  { id: 'panaderia',  label: 'Panadería',  emoji: '🥐' },
+  { id: 'todo', label: 'Todo', emoji: '🛍️' },
+  { id: 'bebidas', label: 'Bebidas', emoji: '🥤' },
+  { id: 'snacks', label: 'Snacks', emoji: '🍫' },
+  { id: 'comidas', label: 'Comidas', emoji: '🍽️' },
+  { id: 'panaderia', label: 'Panadería', emoji: '🥐' },
   { id: 'verduleria', label: 'Verdulería', emoji: '🥦' },
-  { id: 'limpieza',   label: 'Limpieza',   emoji: '🧹' },
-  { id: 'otros',      label: 'Otros',      emoji: '📦' },
+  { id: 'limpieza', label: 'Limpieza', emoji: '🧹' },
+  { id: 'otros', label: 'Otros', emoji: '📦' },
 ];
 
 let allProducts = [];
-let currentCat  = 'todo';
-let cart        = JSON.parse(localStorage.getItem('kiosco_cart') || '[]');
+let currentCat = 'todo';
+let cart = JSON.parse(localStorage.getItem('kiosco_cart') || '[]');
 
 // ── DOM refs ──────────────────────────────────
-const gridEl      = document.getElementById('products-grid');
-const catScroll   = document.getElementById('cat-scroll');
-const cartCount   = document.getElementById('cart-count');
-const cartDrawer  = document.getElementById('cart-drawer');
-const overlay     = document.getElementById('overlay');
-const cartItems   = document.getElementById('cart-items');
-const cartEmpty   = document.getElementById('cart-empty');
-const cartFooter  = document.getElementById('cart-footer');
-const subtotalEl  = document.getElementById('subtotal');
-const envioEl     = document.getElementById('envio');
-const totalEl     = document.getElementById('total');
+const gridEl = document.getElementById('products-grid');
+const catScroll = document.getElementById('cat-scroll');
+const cartCount = document.getElementById('cart-count');
+const cartDrawer = document.getElementById('cart-drawer');
+const overlay = document.getElementById('overlay');
+const cartItems = document.getElementById('cart-items');
+const cartEmpty = document.getElementById('cart-empty');
+const cartFooter = document.getElementById('cart-footer');
+const subtotalEl = document.getElementById('subtotal');
+const envioEl = document.getElementById('envio');
+const totalEl = document.getElementById('total');
 const whatsappBtn = document.getElementById('whatsapp-btn');
-const toast       = document.getElementById('toast');
+const toast = document.getElementById('toast');
 const sectionTitle = document.getElementById('section-title');
 
 // ── Categories ────────────────────────────────
-CATS.forEach(cat => {
+CATS.forEach((cat) => {
   const btn = document.createElement('button');
   btn.className = 'cat-btn' + (cat.id === 'todo' ? ' active' : '');
   btn.dataset.cat = cat.id;
@@ -50,7 +50,9 @@ CATS.forEach(cat => {
 
 function selectCategory(id, label) {
   currentCat = id;
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === id));
+  document
+    .querySelectorAll('.cat-btn')
+    .forEach((b) => b.classList.toggle('active', b.dataset.cat === id));
   sectionTitle.textContent = id === 'todo' ? '🛍️ Todos los productos' : label;
   renderProducts();
 }
@@ -58,14 +60,23 @@ function selectCategory(id, label) {
 // ── Load products ─────────────────────────────
 async function loadProducts() {
   gridEl.innerHTML = skeletons(6);
-  const { data, error } = await supabase.from('productos').select('*').order('categoria').order('nombre');
-  if (error) { gridEl.innerHTML = `<p style="color:red;padding:20px">Error cargando productos</p>`; return; }
+  const { data, error } = await supabase
+    .from('productos')
+    .select('*')
+    .order('categoria')
+    .order('nombre');
+  if (error) {
+    gridEl.innerHTML = `<p style="color:red;padding:20px">Error cargando productos</p>`;
+    return;
+  }
   allProducts = data;
   renderProducts();
 }
 
 function skeletons(n) {
-  return Array(n).fill(`
+  return Array(n)
+    .fill(
+      `
     <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFE0C8">
       <div class="skeleton" style="aspect-ratio:1"></div>
       <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
@@ -73,37 +84,38 @@ function skeletons(n) {
         <div class="skeleton" style="height:14px;width:60%;border-radius:6px"></div>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function renderProducts() {
-  const filtered = currentCat === 'todo'
-    ? allProducts
-    : allProducts.filter(p => p.categoria === currentCat);
+  const filtered =
+    currentCat === 'todo' ? allProducts : allProducts.filter((p) => p.categoria === currentCat);
 
   if (!filtered.length) {
     gridEl.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="emoji">🔍</div><p>No hay productos en esta categoría</p></div>`;
     return;
   }
 
-  gridEl.innerHTML = filtered.map(p => productCard(p)).join('');
+  gridEl.innerHTML = filtered.map((p) => productCard(p)).join('');
 
   // Bind add buttons
-  gridEl.querySelectorAll('[data-add]').forEach(btn => {
+  gridEl.querySelectorAll('[data-add]').forEach((btn) => {
     btn.addEventListener('click', () => addToCart(btn.dataset.add));
   });
-  gridEl.querySelectorAll('[data-inc]').forEach(btn => {
+  gridEl.querySelectorAll('[data-inc]').forEach((btn) => {
     btn.addEventListener('click', () => changeQty(btn.dataset.inc, 1));
   });
-  gridEl.querySelectorAll('[data-dec]').forEach(btn => {
+  gridEl.querySelectorAll('[data-dec]').forEach((btn) => {
     btn.addEventListener('click', () => changeQty(btn.dataset.dec, -1));
   });
 }
 
 function productCard(p) {
-  const inCart   = cart.find(c => c.id === p.id);
-  const qty      = inCart ? inCart.qty : 0;
-  const imgHtml  = p.imagen_url
+  const inCart = cart.find((c) => c.id === p.id);
+  const qty = inCart ? inCart.qty : 0;
+  const imgHtml = p.imagen_url
     ? `<img class="prod-img" src="${p.imagen_url}" alt="${p.nombre}" loading="lazy">`
     : `<div class="prod-placeholder">${categoryEmoji(p.categoria)}</div>`;
 
@@ -135,7 +147,14 @@ function productCard(p) {
 }
 
 function categoryEmoji(cat) {
-  const map = { bebidas:'🥤', snacks:'🍫', comidas:'🍽️', panaderia:'🥐', verduleria:'🥦', limpieza:'🧹' };
+  const map = {
+    bebidas: '🥤',
+    snacks: '🍫',
+    comidas: '🍽️',
+    panaderia: '🥐',
+    verduleria: '🥦',
+    limpieza: '🧹',
+  };
   return map[cat] || '📦';
 }
 
@@ -145,11 +164,19 @@ function formatPrice(n) {
 
 // ── Cart logic ────────────────────────────────
 function addToCart(id) {
-  const prod = allProducts.find(p => p.id === id);
+  const prod = allProducts.find((p) => p.id === id);
   if (!prod) return;
-  const existing = cart.find(c => c.id === id);
+  const existing = cart.find((c) => c.id === id);
   if (existing) existing.qty++;
-  else cart.push({ id, nombre: prod.nombre, precio: prod.precio, imagen_url: prod.imagen_url, categoria: prod.categoria, qty: 1 });
+  else
+    cart.push({
+      id,
+      nombre: prod.nombre,
+      precio: prod.precio,
+      imagen_url: prod.imagen_url,
+      categoria: prod.categoria,
+      qty: 1,
+    });
   saveCart();
   showToast(`✅ ${prod.nombre} agregado`);
   bumpCount();
@@ -157,10 +184,10 @@ function addToCart(id) {
 }
 
 function changeQty(id, delta) {
-  const item = cart.find(c => c.id === id);
+  const item = cart.find((c) => c.id === id);
   if (!item) return;
   item.qty += delta;
-  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  if (item.qty <= 0) cart = cart.filter((c) => c.id !== id);
   saveCart();
   bumpCount();
   renderProducts();
@@ -208,11 +235,12 @@ function renderCart() {
   cartEmpty.style.display = 'none';
   cartFooter.style.display = 'flex';
 
-  cartItems.innerHTML = cart.map(item => {
-    const imgHtml = item.imagen_url
-      ? `<img class="cart-item-img" src="${item.imagen_url}" alt="${item.nombre}">`
-      : `<div class="cart-item-img">${categoryEmoji(item.categoria)}</div>`;
-    return `
+  cartItems.innerHTML = cart
+    .map((item) => {
+      const imgHtml = item.imagen_url
+        ? `<img class="cart-item-img" src="${item.imagen_url}" alt="${item.nombre}">`
+        : `<div class="cart-item-img">${categoryEmoji(item.categoria)}</div>`;
+      return `
       <div class="cart-item">
         ${imgHtml}
         <div class="cart-item-info">
@@ -221,11 +249,12 @@ function renderCart() {
         </div>
         <button class="cart-item-remove" data-remove="${item.id}" title="Quitar">✕</button>
       </div>`;
-  }).join('');
+    })
+    .join('');
 
-  cartItems.querySelectorAll('[data-remove]').forEach(btn => {
+  cartItems.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      cart = cart.filter(c => c.id !== btn.dataset.remove);
+      cart = cart.filter((c) => c.id !== btn.dataset.remove);
       saveCart();
       renderCart();
       renderProducts();
@@ -233,17 +262,19 @@ function renderCart() {
   });
 
   const subtotal = cart.reduce((s, c) => s + c.qty * c.precio, 0);
-  const envio    = PRECIO_ENVIO;
-  const total    = subtotal + envio;
+  const envio = PRECIO_ENVIO;
+  const total = subtotal + envio;
 
   subtotalEl.textContent = `$${formatPrice(subtotal)}`;
-  envioEl.textContent    = `$${formatPrice(envio)}`;
-  totalEl.textContent    = `$${formatPrice(total)}`;
-  whatsappBtn.href       = buildWhatsApp(subtotal, envio, total);
+  envioEl.textContent = `$${formatPrice(envio)}`;
+  totalEl.textContent = `$${formatPrice(total)}`;
+  whatsappBtn.href = buildWhatsApp(subtotal, envio, total);
 }
 
 function buildWhatsApp(subtotal, envio, total) {
-  const lines = cart.map(c => `• ${c.qty}x ${c.nombre} — $${formatPrice(c.qty * c.precio)}`).join('\n');
+  const lines = cart
+    .map((c) => `• ${c.qty}x ${c.nombre} — $${formatPrice(c.qty * c.precio)}`)
+    .join('\n');
   const msg = `🛍️ *Pedido Kiosco Digital*\n\n${lines}\n\n*Subtotal:* $${formatPrice(subtotal)}\n*Envío:* $${formatPrice(envio)}\n*TOTAL: $${formatPrice(total)}*\n\n📍 Mi dirección: `;
   return `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`;
 }
