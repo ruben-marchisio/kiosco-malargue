@@ -1,0 +1,7 @@
+node_modules/
+documentacion/
+.git/
+*.pdf
+*.log
+.vscode/
+.idea/
