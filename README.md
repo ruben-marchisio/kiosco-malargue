@@ -70,11 +70,24 @@ kiosco-malargue/
 ├── 📄 sw.js                   # Service Worker — soporte offline
 │
 ├── 📁 css/
-│   └── style.css              # Estilos del catálogo (variables, grid, carrito, animaciones)
+│   ├── style.css              # 🔀 Punto de entrada — solo @imports (no escribir estilos aquí)
+│   ├── tokens.css             # Variables, dark mode, reset
+│   ├── header.css             # Install banner, header, logo, hero
+│   ├── products.css           # Search bar, categorías, grilla, tarjetas
+│   ├── cart.css               # Overlay, carrito, checkout sheet
+│   └── navigation.css         # Bottom nav, search overlay, toast
 │
 ├── 📁 js/
 │   ├── config.js              # ⚙️ Credenciales: Supabase URL, ANON key, WhatsApp, precio envío
-│   └── app.js                 # Lógica principal: carga productos, carrito, WhatsApp checkout
+│   ├── app.js                 # 🔀 Punto de entrada — importa módulos y registra eventos globales
+│   ├── state.js               # Estado compartido (cart, allProducts, currentCat)
+│   ├── utils.js               # Helpers: fmt(), showToast(), skeletons(), setNavActive()
+│   ├── api.js                 # Cliente Supabase (única instancia exportada)
+│   ├── theme.js               # Toggle dark/light mode
+│   ├── products.js            # Catálogo: carga, render, categorías
+│   ├── cart.js                # Carrito: acciones, renderizado, bottom sheet
+│   ├── checkout.js            # Formulario de entrega, GPS, mensaje WhatsApp
+│   └── search.js              # Overlay de búsqueda y filtrado en tiempo real
 │
 ├── 📁 admin/
 │   ├── index.html             # Panel de administración (protegido por login)
@@ -93,6 +106,56 @@ kiosco-malargue/
 ```
 
 > ⚠️ La carpeta `documentacion/` con credenciales está en `.gitignore` y **nunca se sube a GitHub**.
+
+---
+
+## 📐 Convenciones de código
+
+Estas reglas aplican a **todo el equipo** y deben respetarse en cada PR o cambio.
+
+### Regla de las ~300 líneas
+
+> **Ningún archivo debería superar las ~300 líneas de código.**  
+> No es una regla estricta, pero es una señal de alerta: si un archivo crece más allá de ese límite, probablemente tiene más de una responsabilidad y debe dividirse.
+
+**¿Por qué?**
+
+| Problema con archivos grandes        | Solución con archivos pequeños          |
+| ------------------------------------ | --------------------------------------- |
+| Difícil encontrar un bug o función   | Cada archivo tiene un propósito claro   |
+| Un cambio puede romper otra cosa     | Cambios aislados = menor riesgo         |
+| Difícil leer después de unas semanas | Código autodocumentado por su nombre    |
+| Conflictos de Git frecuentes         | Archivos separados = merges más limpios |
+
+### Responsabilidad única por archivo
+
+Cada módulo JS tiene **una sola razón para cambiar**:
+
+| Archivo       | Responsabilidad                              |
+| ------------- | -------------------------------------------- |
+| `state.js`    | Estado compartido — carrito, productos, etc. |
+| `utils.js`    | Funciones utilitarias sin estado             |
+| `api.js`      | Conexión con Supabase                        |
+| `theme.js`    | Toggle de tema claro/oscuro                  |
+| `products.js` | Render del catálogo y categorías             |
+| `cart.js`     | Lógica y render del carrito                  |
+| `checkout.js` | Formulario, GPS, mensaje WhatsApp            |
+| `search.js`   | Búsqueda en tiempo real                      |
+| `app.js`      | Punto de entrada, eventos globales           |
+
+### CSS modular
+
+Los estilos siguen la misma filosofía:
+
+- `style.css` — **solo** `@import`, nunca escribir estilos directamente aquí
+- Cada archivo CSS cubre una sección visual específica
+- Si agregás una nueva feature, creá un archivo nuevo (ej: `css/notifications.css`)
+
+### Comunicación entre módulos
+
+- Los módulos se importan entre sí vía **ES Modules** (`import/export`)
+- Para romper dependencias circulares se usan **CustomEvents** (ej: `kiosco:addToCart`)
+- El estado compartido vive en `state.js` como objeto mutable, nunca como variables sueltas
 
 ---
 

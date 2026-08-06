@@ -1,0 +1,370 @@
+/* =============================================
+   CARRITO — Overlay, cart sheet, checkout sheet
+   ============================================= */
+
+/* ── Overlay ─────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Cart sheet ──────────────────────────────── */
+.cart-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 301;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.15);
+  padding-bottom: var(--safe-bottom);
+}
+.cart-sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 10px auto 4px;
+  flex-shrink: 0;
+}
+.cart-header {
+  padding: 6px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cart-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+}
+.close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--t);
+}
+.close-btn:active {
+  background: var(--border);
+}
+
+/* ── Items ───────────────────────────────────── */
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overscroll-behavior: contain;
+}
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.cart-item-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #ffe0c0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cart-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.cart-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cart-item-price {
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-top: 2px;
+}
+.cart-item-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #ef4444;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--t);
+}
+.cart-item-remove:active {
+  background: #fecaca;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  display: none;
+}
+.cart-empty .emoji {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.cart-empty p {
+  font-size: 14px;
+}
+
+/* ── Footer / Totales ────────────────────────── */
+.cart-footer {
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--border);
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.cart-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cart-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.cart-row.total {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Botón WhatsApp ──────────────────────────── */
+.whatsapp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--whatsapp);
+  color: white;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+  transition: all var(--t);
+  text-decoration: none;
+  width: 100%;
+  cursor: pointer;
+  font-family: inherit;
+}
+.whatsapp-btn:active {
+  transform: scale(0.97);
+  background: var(--whatsapp-dark);
+}
+.whatsapp-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: white;
+  flex-shrink: 0;
+}
+
+/* ── Checkout sheet ──────────────────────────── */
+.checkout-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 302;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18);
+  padding-bottom: var(--safe-bottom);
+}
+.checkout-sheet.open {
+  transform: translateY(0);
+}
+.checkout-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 20px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overscroll-behavior: contain;
+}
+.checkout-intro {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.checkout-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.checkout-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.checkout-field input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color var(--t),
+    background var(--t);
+}
+.checkout-field input:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+.checkout-field input::placeholder {
+  color: var(--text-muted);
+}
+
+.checkout-location {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.location-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--primary);
+  background: var(--surface-2);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all var(--t);
+  width: 100%;
+  cursor: pointer;
+}
+.location-btn:active {
+  transform: scale(0.97);
+}
+.location-btn.loading {
+  opacity: 0.6;
+  cursor: wait;
+  border-style: solid;
+}
+.location-btn.success {
+  border-style: solid;
+  border-color: var(--whatsapp);
+  background: #d1fae5;
+  color: #065f46;
+}
+.location-btn.error {
+  border-color: #ef4444;
+  background: #fee2e2;
+  color: #991b1b;
+}
+[data-theme="dark"] .location-btn.success {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+[data-theme="dark"] .location-btn.error {
+  background: #450a0a;
+  color: #fca5a5;
+}
+.location-btn-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.location-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+
+.checkout-footer {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Desktop panel lateral ───────────────────── */
+@media (min-width: 768px) {
+  .cart-sheet,
+  .checkout-sheet {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 420px;
+    border-radius: 0;
+    max-height: 100vh;
+    transform: translateX(100%);
+  }
+  .cart-sheet.open,
+  .checkout-sheet.open {
+    transform: translateX(0);
+  }
+  .sheet-handle {
+    display: none;
+  }
+}

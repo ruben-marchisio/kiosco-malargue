@@ -1,0 +1,166 @@
+/* =============================================
+   Módulo de productos — catálogo, render, categorías
+   ============================================= */
+
+import { supabase } from './api.js';
+import { state } from './state.js';
+import { fmt, skeletons } from './utils.js';
+
+// ── Constantes ────────────────────────────────
+export const CATS = [
+  { id: 'todo', label: 'Todo', emoji: '🛍️' },
+  { id: 'bebidas', label: 'Bebidas', emoji: '🥤' },
+  { id: 'snacks', label: 'Snacks', emoji: '🍫' },
+  { id: 'comidas', label: 'Comidas', emoji: '🍽️' },
+  { id: 'panaderia', label: 'Panadería', emoji: '🥐' },
+  { id: 'verduleria', label: 'Verdulería', emoji: '🥦' },
+  { id: 'limpieza', label: 'Limpieza', emoji: '🧹' },
+  { id: 'otros', label: 'Otros', emoji: '📦' },
+];
+
+export const CAT_EMOJI = {
+  bebidas: '🥤',
+  snacks: '🍫',
+  comidas: '🍽️',
+  panaderia: '🥐',
+  verduleria: '🥦',
+  limpieza: '🧹',
+  otros: '📦',
+};
+
+// ── DOM refs ──────────────────────────────────
+const gridEl = document.getElementById('products-grid');
+const catScroll = document.getElementById('cat-scroll');
+const sectionTitle = document.getElementById('section-title');
+
+// ── Categorías ────────────────────────────────
+export function initCategories() {
+  CATS.forEach((cat) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat.id === 'todo' ? ' active' : '');
+    btn.dataset.cat = cat.id;
+    btn.innerHTML = `<span>${cat.emoji}</span> ${cat.label}`;
+    btn.addEventListener('click', () => selectCategory(cat.id, `${cat.emoji} ${cat.label}`));
+    catScroll.appendChild(btn);
+  });
+}
+
+export function selectCategory(id, label) {
+  state.currentCat = id;
+  document
+    .querySelectorAll('.cat-btn')
+    .forEach((b) => b.classList.toggle('active', b.dataset.cat === id));
+  sectionTitle.textContent = id === 'todo' ? '🛍️ Todos los productos' : label;
+  renderProducts();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Carga ─────────────────────────────────────
+export async function loadProducts() {
+  gridEl.innerHTML = skeletons(6);
+  const { data, error } = await supabase
+    .from('productos')
+    .select('*')
+    .order('categoria')
+    .order('nombre');
+  if (error) {
+    gridEl.innerHTML = `<p style="color:red;padding:20px;grid-column:1/-1">Error al cargar productos. Verificá tu conexión.</p>`;
+    return;
+  }
+  state.allProducts = data;
+  renderProducts();
+  loadConfig();
+}
+
+async function loadConfig() {
+  const { data } = await supabase.from('config_negocio').select('abierto').eq('id', 1).single();
+  if (!data) return;
+  const badge = document.getElementById('status-badge');
+  const txt = document.getElementById('status-text');
+  if (!data.abierto) {
+    badge.classList.add('closed');
+    badge.querySelector('.status-dot').style.animation = 'none';
+    txt.textContent = 'Cerrado';
+  }
+}
+
+// ── Render ────────────────────────────────────
+export function renderProducts(list = null) {
+  const source = list ?? state.allProducts;
+  const filtered =
+    list !== null
+      ? source
+      : state.currentCat === 'todo'
+        ? source
+        : source.filter((p) => p.categoria === state.currentCat);
+
+  if (!filtered.length) {
+    gridEl.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>No hay productos aquí</p></div>`;
+    return;
+  }
+  gridEl.innerHTML = filtered.map((p) => productCard(p)).join('');
+  bindProductEvents(gridEl);
+}
+
+export function productCard(p) {
+  const inCart = state.cart.find((c) => c.id === p.id);
+  const qty = inCart ? inCart.qty : 0;
+
+  const imgHtml = p.imagen_url
+    ? `<img class="prod-img" src="${p.imagen_url}" alt="${p.nombre}" loading="lazy">`
+    : `<div class="prod-placeholder">${CAT_EMOJI[p.categoria] || '📦'}</div>`;
+
+  const actionHtml = !p.disponible
+    ? `<button class="add-btn" disabled title="Sin stock">+</button>`
+    : qty > 0
+      ? `<div class="qty-ctrl">
+           <button data-dec="${p.id}" aria-label="Quitar uno">−</button>
+           <span class="qty">${qty}</span>
+           <button data-inc="${p.id}" aria-label="Agregar uno">+</button>
+         </div>`
+      : `<button class="add-btn" data-add="${p.id}" aria-label="Agregar ${p.nombre}">+</button>`;
+
+  return `
+    <div class="product-card ${!p.disponible ? 'unavailable' : ''}">
+      <div class="prod-img-wrap">
+        ${imgHtml}
+        ${p.es_tercero ? `<span class="tercero-badge">Vecino</span>` : ''}
+        ${!p.disponible ? `<div class="unavail-overlay">Sin stock</div>` : ''}
+      </div>
+      <div class="prod-info">
+        <div class="prod-name">${p.nombre}</div>
+        <div class="prod-bottom">
+          <span class="prod-price">$${fmt(p.precio)}</span>
+          ${actionHtml}
+        </div>
+      </div>
+    </div>`;
+}
+
+export function bindProductEvents(container) {
+  container
+    .querySelectorAll('[data-add]')
+    .forEach((btn) =>
+      btn.addEventListener('click', () =>
+        document.dispatchEvent(new CustomEvent('kiosco:addToCart', { detail: btn.dataset.add }))
+      )
+    );
+  container
+    .querySelectorAll('[data-inc]')
+    .forEach((btn) =>
+      btn.addEventListener('click', () =>
+        document.dispatchEvent(
+          new CustomEvent('kiosco:changeQty', { detail: { id: btn.dataset.inc, delta: 1 } })
+        )
+      )
+    );
+  container
+    .querySelectorAll('[data-dec]')
+    .forEach((btn) =>
+      btn.addEventListener('click', () =>
+        document.dispatchEvent(
+          new CustomEvent('kiosco:changeQty', { detail: { id: btn.dataset.dec, delta: -1 } })
+        )
+      )
+    );
+}
