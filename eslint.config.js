@@ -19,6 +19,7 @@ export default [
         navigator: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        sessionStorage: 'readonly',
         // Globals del proyecto (definidos en config.js)
         SUPABASE_URL: 'readonly',
         SUPABASE_ANON: 'readonly',

@@ -1,13 +1,14 @@
 {
   "name": "Kiosco Digital Malargüe",
   "short_name": "Kiosco",
-  "description": "Tu kiosco de barrio online — Colonia Hípica, Malargüe",
+  "description": "Tu kiosco de barrio online — Colonia Hípica, Malargüe, Mendoza",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFF8F0",
+  "background_color": "#ffffff",
   "theme_color": "#FF6B35",
   "orientation": "portrait-primary",
   "lang": "es-AR",
+  "scope": "/",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -22,5 +23,7 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["food", "shopping"]
+  "screenshots": [],
+  "categories": ["food", "shopping"],
+  "prefer_related_applications": false
 }

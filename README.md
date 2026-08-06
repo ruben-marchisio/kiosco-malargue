@@ -11,7 +11,7 @@
 
 ## 📖 ¿Qué es este proyecto?
 
-Kiosco Digital transforma un **kiosco tradicional de barrio** en un punto de distribución digital (*Dark Store*), permitiendo a los clientes navegar el catálogo desde el celular y confirmar pedidos directamente por **WhatsApp**, sin descargar ninguna app y sin registrarse.
+Kiosco Digital transforma un **kiosco tradicional de barrio** en un punto de distribución digital (_Dark Store_), permitiendo a los clientes navegar el catálogo desde el celular y confirmar pedidos directamente por **WhatsApp**, sin descargar ninguna app y sin registrarse.
 
 ### El problema que resuelve
 
@@ -20,6 +20,7 @@ Plataformas como **Rappi o PedidosYa no operan en Malargüe** por su baja densid
 ### El concepto clave
 
 No es solo un kiosco digital. La plataforma funciona como un **Marketplace hiperlocal**:
+
 - El kiosco vende sus propios productos
 - Integra **productores vecinos** (panadería, verdulería, comida casera) bajo un modelo de consignación con **10% de comisión**
 - Todo llega en **un solo envío**, coordinado por WhatsApp
@@ -28,34 +29,34 @@ No es solo un kiosco digital. La plataforma funciona como un **Marketplace hiper
 
 ## 🎯 Filosofía de diseño: "WhatsApp-First"
 
-| Principio | Implementación |
-|-----------|---------------|
-| **Cero registro** | El cliente navega y compra sin crear cuenta |
-| **Cero fricción** | Sin descargas, sin formularios |
-| **Carrito persistente** | Guardado en `localStorage` (sobrevive desconexiones) |
-| **Cierre automático** | Botón genera mensaje estructurado y abre WhatsApp directamente |
-| **Cero costo fijo** | Hosting gratuito en Cloudflare, DB gratuita en Supabase |
+| Principio               | Implementación                                                 |
+| ----------------------- | -------------------------------------------------------------- |
+| **Cero registro**       | El cliente navega y compra sin crear cuenta                    |
+| **Cero fricción**       | Sin descargas, sin formularios                                 |
+| **Carrito persistente** | Guardado en `localStorage` (sobrevive desconexiones)           |
+| **Cierre automático**   | Botón genera mensaje estructurado y abre WhatsApp directamente |
+| **Cero costo fijo**     | Hosting gratuito en Cloudflare, DB gratuita en Supabase        |
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-| Capa | Tecnología | Justificación |
-|------|-----------|---------------|
-| **Frontend / PWA** | HTML5 + CSS Vanilla + JS ES2022 | Carga < 1s, ultra liviano, instalable en el cel |
-| **Estilos** | CSS Custom Properties + Google Fonts (Inter) | Sin dependencias, diseño moderno y responsive |
-| **Backend / DB** | [Supabase](https://supabase.com) (PostgreSQL) | API REST instantánea, Auth, Storage, RLS — plan gratuito |
-| **Hosting / CDN** | [Cloudflare Pages](https://pages.cloudflare.com) | Edge global, deploy automático con `git push`, 100% gratis |
-| **Control de versiones** | Git + GitHub | CI/CD automático via Cloudflare Pages |
-| **Arquitectura** | Jamstack Serverless | Sin servidores propios, sin cold starts |
+| Capa                     | Tecnología                                       | Justificación                                              |
+| ------------------------ | ------------------------------------------------ | ---------------------------------------------------------- |
+| **Frontend / PWA**       | HTML5 + CSS Vanilla + JS ES2022                  | Carga < 1s, ultra liviano, instalable en el cel            |
+| **Estilos**              | CSS Custom Properties + Google Fonts (Inter)     | Sin dependencias, diseño moderno y responsive              |
+| **Backend / DB**         | [Supabase](https://supabase.com) (PostgreSQL)    | API REST instantánea, Auth, Storage, RLS — plan gratuito   |
+| **Hosting / CDN**        | [Cloudflare Pages](https://pages.cloudflare.com) | Edge global, deploy automático con `git push`, 100% gratis |
+| **Control de versiones** | Git + GitHub                                     | CI/CD automático via Cloudflare Pages                      |
+| **Arquitectura**         | Jamstack Serverless                              | Sin servidores propios, sin cold starts                    |
 
 ### Herramientas de desarrollo
 
-| Herramienta | Versión | Uso |
-|-------------|---------|-----|
-| **Prettier** | ^3.x | Formateo automático de código |
-| **ESLint** | ^10.x | Linting y detección de errores JS |
-| **EditorConfig** | — | Consistencia entre editores |
+| Herramienta      | Versión | Uso                               |
+| ---------------- | ------- | --------------------------------- |
+| **Prettier**     | ^3.x    | Formateo automático de código     |
+| **ESLint**       | ^10.x   | Linting y detección de errores JS |
+| **EditorConfig** | —       | Consistencia entre editores       |
 
 ---
 
@@ -98,6 +99,7 @@ kiosco-malargue/
 ## 🗄️ Modelo de Datos (Supabase)
 
 ### Tabla `productos`
+
 ```sql
 id              UUID        -- ID único
 nombre          TEXT        -- "Coca Cola 500ml"
@@ -113,6 +115,7 @@ updated_at      TIMESTAMPTZ -- Se actualiza automáticamente via trigger
 ```
 
 ### Tabla `pedidos_log`
+
 ```sql
 id              UUID
 detalle         JSONB       -- Items del pedido
@@ -126,6 +129,7 @@ created_at      TIMESTAMPTZ
 ```
 
 ### Tabla `config_negocio`
+
 ```sql
 id               INT  -- Siempre = 1 (fila única)
 nombre_negocio   TEXT
@@ -135,11 +139,12 @@ abierto          BOOLEAN -- Controla el badge "Abierto/Cerrado" en la tienda
 ```
 
 ### Seguridad (RLS — Row Level Security)
-| Tabla | Lectura | Escritura |
-|-------|---------|-----------|
-| `productos` | 🌐 Pública | 🔒 Solo admin autenticado |
-| `pedidos_log` | 🔒 Solo admin | 🔒 Solo admin |
-| `config_negocio` | 🌐 Pública | 🔒 Solo admin |
+
+| Tabla            | Lectura       | Escritura                 |
+| ---------------- | ------------- | ------------------------- |
+| `productos`      | 🌐 Pública    | 🔒 Solo admin autenticado |
+| `pedidos_log`    | 🔒 Solo admin | 🔒 Solo admin             |
+| `config_negocio` | 🌐 Pública    | 🔒 Solo admin             |
 
 ---
 
@@ -174,16 +179,17 @@ Login: email + contraseña configurados en Supabase Authentication.
 
 ### Funcionalidades
 
-| Sección | Qué permite hacer |
-|---------|--------------------|
-| **Dashboard** | Ver estadísticas del día: venta total, envíos, comisiones, pedidos |
-| **Stock** | Activar/desactivar productos con un toggle (sin conteo de inventario) |
-| **Stock** | Agregar, editar o eliminar productos |
-| **Pedidos** | Registrar pedidos confirmados vía WhatsApp |
-| **Pedidos** | Ver historial del día con desglose de montos |
-| **Config** | Cambiar número de WhatsApp, precio de envío, estado abierto/cerrado |
+| Sección       | Qué permite hacer                                                     |
+| ------------- | --------------------------------------------------------------------- |
+| **Dashboard** | Ver estadísticas del día: venta total, envíos, comisiones, pedidos    |
+| **Stock**     | Activar/desactivar productos con un toggle (sin conteo de inventario) |
+| **Stock**     | Agregar, editar o eliminar productos                                  |
+| **Pedidos**   | Registrar pedidos confirmados vía WhatsApp                            |
+| **Pedidos**   | Ver historial del día con desglose de montos                          |
+| **Config**    | Cambiar número de WhatsApp, precio de envío, estado abierto/cerrado   |
 
 ### Lógica del stock (interruptor infinito)
+
 Los productos **no tienen un contador de unidades**. Solo tienen un estado `disponible: true/false`. Con un toque desde el celular se activa o desactiva la visibilidad en tiempo real.
 
 ---
@@ -236,6 +242,7 @@ Cloudflare Pages (build ~30 segundos)
 ## 🔧 Configuración inicial (para clonar el proyecto)
 
 ### 1. Clonar el repo
+
 ```bash
 git clone https://github.com/ruben-marchisio/kiosco-malargue.git
 cd kiosco-malargue
@@ -243,22 +250,27 @@ npm install
 ```
 
 ### 2. Configurar Supabase
+
 Editar `js/config.js`:
+
 ```js
-const SUPABASE_URL  = 'https://TU-PROYECTO.supabase.co';
+const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
 const SUPABASE_ANON = 'TU_ANON_PUBLIC_KEY';
-const WHATSAPP_NUM  = '549XXXXXXXXXX';  // Código país (54) + 9 + número
-const PRECIO_ENVIO  = 500;             // Precio en pesos
+const WHATSAPP_NUM = '549XXXXXXXXXX'; // Código país (54) + 9 + número
+const PRECIO_ENVIO = 500; // Precio en pesos
 ```
 
 ### 3. Crear las tablas en Supabase
+
 - Ir a **SQL Editor** en Supabase
 - Copiar y ejecutar el contenido de `supabase_schema.sql`
 
 ### 4. Crear usuario admin
+
 - En Supabase → **Authentication → Users → Add user**
 
 ### 5. Conectar Cloudflare Pages
+
 - Workers & Pages → Create → Pages → Connect to Git
 - Seleccionar el repo, framework: `None`, build: vacío, output: `/`
 
@@ -266,11 +278,11 @@ const PRECIO_ENVIO  = 500;             // Precio en pesos
 
 ## 📊 Modelo de Negocio
 
-| Ingreso | Detalle |
-|---------|---------|
-| **Venta directa** | Productos propios del kiosco |
-| **Comisión vecinos** | 10% sobre productos de productores locales integrados |
-| **Tarifa de envío** | $4.000 por delivery (se liquida al repartidor al cierre del día) |
+| Ingreso              | Detalle                                                          |
+| -------------------- | ---------------------------------------------------------------- |
+| **Venta directa**    | Productos propios del kiosco                                     |
+| **Comisión vecinos** | 10% sobre productos de productores locales integrados            |
+| **Tarifa de envío**  | $4.000 por delivery (se liquida al repartidor al cierre del día) |
 
 ---
 
