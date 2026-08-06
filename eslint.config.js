@@ -17,6 +17,8 @@ export default [
         confirm: 'readonly',
         console: 'readonly',
         navigator: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         // Globals del proyecto (definidos en config.js)
         SUPABASE_URL: 'readonly',
         SUPABASE_ANON: 'readonly',
@@ -31,6 +33,11 @@ export default [
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
     },
+  },
+  {
+    // config.js define globals del proyecto — no es un módulo normal
+    files: ['js/config.js'],
+    rules: { 'no-unused-vars': 'off' },
   },
   {
     // Ignorar carpetas
