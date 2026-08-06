@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 3000",
+    "build": "rm -rf dist && mkdir -p dist && cp -r index.html css js admin icons manifest.json sw.js dist/",
     "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
     "lint": "eslint js/ admin/js/",
     "check": "prettier --check \"**/*.{js,html,css,json,md}\"",
-    "deploy": "git add -A && git commit -m '🚀 deploy' && git push"
+    "deploy": "npm run build && git add -A && git commit -m '🚀 deploy' && git push"
   },
   "repository": {
     "type": "git",

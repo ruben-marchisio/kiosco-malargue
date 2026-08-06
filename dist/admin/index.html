@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — Kiosco Digital</title>
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+    <script src="/js/config.js"></script>
+  </head>
+  <body>
+    <!-- ── LOGIN ── -->
+    <div class="login-wrap" id="login-wrap">
+      <div class="login-card">
+        <div class="login-logo">
+          <span class="icon">🏪</span>
+          <h1>Panel Admin</h1>
+          <p>Kiosco Digital · Malargüe</p>
+        </div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="admin@kiosco.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" />
+          </div>
+          <button type="submit" class="login-btn">Ingresar →</button>
+          <p class="login-error" id="login-error"></p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── ADMIN LAYOUT ── -->
+    <div class="admin-layout" id="admin-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">🏪 Kiosco Admin</div>
+          <div class="sidebar-sub">Panel de control</div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-item active" data-page="page-dashboard"><span class="icon">📊</span> Dashboard</div>
+          <div class="nav-item" data-page="page-stock"><span class="icon">📦</span> Stock</div>
+          <div class="nav-item" data-page="page-pedidos"><span class="icon">📋</span> Pedidos</div>
+          <div class="nav-item" data-page="page-config"><span class="icon">⚙️</span> Configuración</div>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="logout-btn" id="logout-btn">🚪 Cerrar sesión</button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <div class="main-content">
+        <!-- Dashboard -->
+        <div class="page" id="page-dashboard">
+          <div class="page-header">
+            <h2>📊 Dashboard</h2>
+          </div>
+          <div class="page-content">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Productos totales</div>
+                <div class="stat-value" id="stat-prods">—</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Disponibles</div>
+                <div class="stat-value" id="stat-activos" style="color: var(--success)">—</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Venta hoy</div>
+                <div class="stat-value" id="stat-venta" style="color: var(--primary)">—</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Envíos hoy</div>
+                <div class="stat-value" id="stat-envios">—</div>
+                <div class="stat-sub">A liquidar al repartidor</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Comisión vecinos</div>
+                <div class="stat-value" id="stat-comision">—</div>
+                <div class="stat-sub">10% productos terceros</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Pedidos hoy</div>
+                <div class="stat-value" id="stat-pedidos">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stock -->
+        <div class="page" id="page-stock" style="display: none">
+          <div class="page-header">
+            <h2>📦 Stock</h2>
+            <button class="btn btn-primary" id="add-product-btn">+ Nuevo producto</button>
+          </div>
+          <div class="page-content">
+            <div class="card">
+              <div class="card-head"><h3>Todos los productos</h3></div>
+              <div style="overflow-x: auto">
+                <table class="prod-table">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Categoría</th>
+                      <th>Precio</th>
+                      <th>Disponible</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stock-tbody">
+                    <tr>
+                      <td colspan="5" style="text-align: center; padding: 30px; color: #888">Cargando...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pedidos -->
+        <div class="page" id="page-pedidos" style="display: none">
+          <div class="page-header"><h2>📋 Pedidos del día</h2></div>
+          <div class="page-content">
+            <!-- Registrar pedido manual -->
+            <div class="card" style="margin-bottom: 20px">
+              <div class="card-head"><h3>➕ Registrar pedido confirmado</h3></div>
+              <div style="padding: 20px">
+                <form id="pedido-form">
+                  <div class="field-row">
+                    <div class="field">
+                      <label>Monto total ($)</label>
+                      <input type="number" id="p-total" placeholder="0" required min="0" />
+                    </div>
+                    <div class="field">
+                      <label>Costo envío ($)</label>
+                      <input type="number" id="p-envio" placeholder="500" value="500" min="0" />
+                    </div>
+                  </div>
+                  <div class="checkbox-group">
+                    <input type="checkbox" id="p-delivery" checked />
+                    <label for="p-delivery">Es delivery</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input type="checkbox" id="p-comision" />
+                    <label for="p-comision">Incluye producto de vecino (cobra 10% comisión)</label>
+                  </div>
+                  <div class="field">
+                    <label>Notas (opcional)</label>
+                    <input type="text" id="p-notas" placeholder="Ej: Lomitos + empanadas vecino Ana" />
+                  </div>
+                  <button type="submit" class="btn btn-primary">Registrar pedido</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Lista -->
+            <div class="card">
+              <div class="card-head"><h3>Historial de hoy</h3></div>
+              <div style="padding: 0 20px" id="pedidos-list">
+                <p style="text-align: center; color: #888; padding: 30px">Cargando...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config -->
+        <div class="page" id="page-config" style="display: none">
+          <div class="page-header"><h2>⚙️ Configuración</h2></div>
+          <div class="page-content">
+            <div class="card">
+              <div class="card-head"><h3>Datos del negocio</h3></div>
+              <div style="padding: 20px">
+                <form id="config-form">
+                  <div class="field">
+                    <label>Nombre del negocio</label>
+                    <input type="text" id="c-nombre" placeholder="Kiosco Digital" />
+                  </div>
+                  <div class="field">
+                    <label>Número de WhatsApp (con código de país)</label>
+                    <input type="text" id="c-wa" placeholder="5492604000000" />
+                  </div>
+                  <div class="field">
+                    <label>Precio de envío ($)</label>
+                    <input type="number" id="c-envio" placeholder="500" min="0" />
+                  </div>
+                  <div class="checkbox-group">
+                    <input type="checkbox" id="c-abierto" />
+                    <label for="c-abierto">Negocio abierto (visible en la tienda)</label>
+                  </div>
+                  <button type="submit" class="btn btn-primary">💾 Guardar configuración</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /main-content -->
+    </div>
+    <!-- /admin-layout -->
+
+    <!-- ── MODAL PRODUCTO ── -->
+    <div class="modal-overlay" id="product-modal">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modal-title">Nuevo producto</h3>
+          <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <form id="product-form">
+          <div class="modal-body">
+            <div class="field">
+              <label>Nombre *</label>
+              <input type="text" id="f-nombre" required placeholder="Ej: Coca Cola 500ml" />
+            </div>
+            <div class="field">
+              <label>Descripción</label>
+              <textarea id="f-descripcion" placeholder="Descripción corta..."></textarea>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Categoría *</label>
+                <select id="f-categoria" required>
+                  <option value="bebidas">🥤 Bebidas</option>
+                  <option value="snacks">🍫 Snacks</option>
+                  <option value="comidas">🍽️ Comidas</option>
+                  <option value="panaderia">🥐 Panadería</option>
+                  <option value="verduleria">🥦 Verdulería</option>
+                  <option value="limpieza">🧹 Limpieza</option>
+                  <option value="otros">📦 Otros</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Precio ($) *</label>
+                <input type="number" id="f-precio" required min="0" step="0.01" placeholder="1200" />
+              </div>
+            </div>
+            <div class="field">
+              <label>URL de imagen (opcional)</label>
+              <input type="url" id="f-imagen" placeholder="https://..." />
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="f-tercero" />
+              <label for="f-tercero">Producto de vecino/tercero (cobra 10% comisión)</label>
+            </div>
+            <div class="field">
+              <label>Nombre del proveedor (si es tercero)</label>
+              <input type="text" id="f-proveedor" placeholder="Ej: Ana Rodríguez" />
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="f-disponible" checked />
+              <label for="f-disponible">Disponible (visible en el catálogo)</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn" id="modal-cancel" style="background: #f3f4f6">Cancelar</button>
+            <button type="submit" class="btn btn-primary">💾 Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="/admin/js/admin.js"></script>
+  </body>
+</html>

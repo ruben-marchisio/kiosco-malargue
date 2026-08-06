@@ -1,0 +1,11 @@
+node_modules
+documentacion
+.git
+.vscode
+.idea
+package-lock.json
+package.json
+eslint.config.js
+README.md
+Plan_Proyecto_Kiosco_Malargue.pdf
+*.log
