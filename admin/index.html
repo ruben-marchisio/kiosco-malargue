@@ -94,9 +94,24 @@
         <div class="page" id="page-stock" style="display: none">
           <div class="page-header">
             <h2>📦 Stock</h2>
-            <button class="btn btn-primary" id="add-product-btn">+ Nuevo producto</button>
+            <div class="header-actions">
+              <button class="btn btn-secondary" id="import-csv-btn">📥 Importar CSV</button>
+              <button class="btn btn-primary" id="add-product-btn">+ Nuevo producto</button>
+            </div>
           </div>
           <div class="page-content">
+            <!-- Buscador -->
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="search"
+                id="stock-search"
+                class="search-input"
+                placeholder="Buscar por nombre, marca o categoría..."
+                autocomplete="off"
+              />
+            </div>
+            <!-- Tabla -->
             <div class="card">
               <div class="card-head"><h3>Todos los productos</h3></div>
               <div style="overflow-x: auto">
@@ -104,6 +119,7 @@
                   <thead>
                     <tr>
                       <th>Producto</th>
+                      <th>Marca</th>
                       <th>Categoría</th>
                       <th>Precio</th>
                       <th>Disponible</th>
@@ -112,7 +128,7 @@
                   </thead>
                   <tbody id="stock-tbody">
                     <tr>
-                      <td colspan="5" style="text-align: center; padding: 30px; color: #888">Cargando...</td>
+                      <td colspan="6" class="table-placeholder">Cargando...</td>
                     </tr>
                   </tbody>
                 </table>
@@ -125,7 +141,6 @@
         <div class="page" id="page-pedidos" style="display: none">
           <div class="page-header"><h2>📋 Pedidos del día</h2></div>
           <div class="page-content">
-            <!-- Registrar pedido manual -->
             <div class="card" style="margin-bottom: 20px">
               <div class="card-head"><h3>➕ Registrar pedido confirmado</h3></div>
               <div style="padding: 20px">
@@ -150,18 +165,22 @@
                   </div>
                   <div class="field">
                     <label>Notas (opcional)</label>
-                    <input type="text" id="p-notas" placeholder="Ej: Lomitos + empanadas vecino Ana" />
+                    <input
+                      type="text"
+                      id="p-notas"
+                      placeholder="Ej: Lomitos + empanadas vecino Ana"
+                      spellcheck="true"
+                      lang="es"
+                    />
                   </div>
                   <button type="submit" class="btn btn-primary">Registrar pedido</button>
                 </form>
               </div>
             </div>
-
-            <!-- Lista -->
             <div class="card">
               <div class="card-head"><h3>Historial de hoy</h3></div>
               <div style="padding: 0 20px" id="pedidos-list">
-                <p style="text-align: center; color: #888; padding: 30px">Cargando...</p>
+                <p class="table-placeholder">Cargando...</p>
               </div>
             </div>
           </div>
@@ -211,22 +230,30 @@
         </div>
         <form id="product-form">
           <div class="modal-body">
-            <div class="field">
-              <label>Nombre *</label>
-              <input type="text" id="f-nombre" required placeholder="Ej: Coca Cola 500ml" />
+            <div class="field-row">
+              <div class="field">
+                <label>Nombre *</label>
+                <input type="text" id="f-nombre" required placeholder="Ej: Gaseosa 500ml" spellcheck="true" lang="es" />
+              </div>
+              <div class="field">
+                <label>Marca</label>
+                <input type="text" id="f-marca" placeholder="Ej: Coca-Cola" />
+              </div>
             </div>
             <div class="field">
               <label>Descripción</label>
-              <textarea id="f-descripcion" placeholder="Descripción corta..."></textarea>
+              <textarea id="f-descripcion" placeholder="Descripción corta..." spellcheck="true" lang="es"></textarea>
             </div>
             <div class="field-row">
               <div class="field">
                 <label>Categoría *</label>
                 <select id="f-categoria" required>
                   <option value="bebidas">🥤 Bebidas</option>
-                  <option value="snacks">🍫 Snacks</option>
+                  <option value="alcohol">🍺 Con alcohol</option>
+                  <option value="snacks">🍫 Snacks y golosinas</option>
                   <option value="comidas">🍽️ Comidas</option>
                   <option value="panaderia">🥐 Panadería</option>
+                  <option value="almacen">🏪 Almacén</option>
                   <option value="verduleria">🥦 Verdulería</option>
                   <option value="limpieza">🧹 Limpieza</option>
                   <option value="otros">📦 Otros</option>
@@ -255,10 +282,39 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn" id="modal-cancel" style="background: #f3f4f6">Cancelar</button>
+            <button type="button" class="btn btn-secondary" id="modal-cancel">Cancelar</button>
             <button type="submit" class="btn btn-primary">💾 Guardar</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- ── MODAL IMPORTAR CSV ── -->
+    <div class="modal-overlay" id="csv-modal">
+      <div class="modal" style="max-width: 600px">
+        <div class="modal-head">
+          <h3>📥 Importar productos desde CSV</h3>
+          <button class="modal-close" id="csv-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="csv-instructions">
+            <p>El archivo CSV debe tener estas columnas:</p>
+            <code>nombre, marca, categoria, precio, descripcion</code>
+            <p class="hint">
+              Categorías válidas: bebidas · snacks · comidas · panaderia · verduleria · limpieza · otros
+            </p>
+          </div>
+          <div class="csv-actions">
+            <button class="btn btn-secondary" id="csv-template-btn">📄 Descargar plantilla</button>
+            <label class="btn btn-primary csv-file-label" for="csv-file-input"> 📂 Elegir archivo CSV </label>
+            <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display: none" />
+          </div>
+          <div id="csv-preview"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="csv-modal-close-footer">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="csv-confirm-btn" disabled>Importar productos</button>
+        </div>
       </div>
     </div>
 

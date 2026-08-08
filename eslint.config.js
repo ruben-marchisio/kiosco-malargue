@@ -22,6 +22,9 @@ export default [
         sessionStorage: 'readonly',
         CustomEvent: 'readonly',
         Event: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly',
+        FileReader: 'readonly',
         // Globals del proyecto (definidos en config.js)
         SUPABASE_URL: 'readonly',
         SUPABASE_ANON: 'readonly',

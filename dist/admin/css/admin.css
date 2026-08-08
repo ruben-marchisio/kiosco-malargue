@@ -539,6 +539,199 @@ textarea {
   color: var(--primary);
 }
 
+/* ── HEADER ACTIONS ── */
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── BUTTONS extra ── */
+.btn-secondary {
+  background: #f3f4f6;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* ── BUSCADOR STOCK ── */
+.search-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  padding: 11px 14px 11px 42px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  transition:
+    border-color var(--t),
+    box-shadow var(--t);
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+}
+
+/* ── PRODUCT TABLE extras ── */
+.prod-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.text-muted {
+  color: var(--text-muted);
+}
+.table-placeholder {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+}
+
+/* ── BRAND BADGE ── */
+.brand-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ── CSV MODAL ── */
+.csv-instructions {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.csv-instructions p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.csv-instructions p:last-child {
+  margin-bottom: 0;
+}
+.csv-instructions code {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+.csv-instructions .hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.csv-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.csv-file-label {
+  cursor: pointer;
+}
+.csv-errors {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #991b1b;
+}
+.csv-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: 10px;
+}
+.csv-table-wrap {
+  overflow-x: auto;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ── CORRECTOR ORTOGRÁFICO ── */
+.spell-hint {
+  margin-top: 5px;
+  padding: 7px 11px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.6;
+  animation: spellFadeIn 0.2s ease;
+}
+@keyframes spellFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.spell-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+.spell-group {
+  display: inline;
+}
+.spell-group em {
+  font-style: normal;
+  font-weight: 600;
+  color: #b45309;
+}
+.spell-sug {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 2px 8px;
+  background: white;
+  border: 1.5px solid #f59e0b;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400e;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.spell-sug:hover {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .sidebar {

@@ -4,15 +4,18 @@
 
 import { supabase } from './api.js';
 import { state } from './state.js';
-import { fmt, skeletons } from './utils.js';
+import { fmt, skeletons, showToast } from './utils.js';
+import { getCachedCatalog, setCatalogCache } from './cache.js';
 
 // ── Constantes ────────────────────────────────
 export const CATS = [
   { id: 'todo', label: 'Todo', emoji: '🛍️' },
   { id: 'bebidas', label: 'Bebidas', emoji: '🥤' },
+  { id: 'alcohol', label: 'Con alcohol', emoji: '🍺' },
   { id: 'snacks', label: 'Snacks', emoji: '🍫' },
   { id: 'comidas', label: 'Comidas', emoji: '🍽️' },
   { id: 'panaderia', label: 'Panadería', emoji: '🥐' },
+  { id: 'almacen', label: 'Almacén', emoji: '🏪' },
   { id: 'verduleria', label: 'Verdulería', emoji: '🥦' },
   { id: 'limpieza', label: 'Limpieza', emoji: '🧹' },
   { id: 'otros', label: 'Otros', emoji: '📦' },
@@ -20,9 +23,11 @@ export const CATS = [
 
 export const CAT_EMOJI = {
   bebidas: '🥤',
+  alcohol: '🍺',
   snacks: '🍫',
   comidas: '🍽️',
   panaderia: '🥐',
+  almacen: '🏪',
   verduleria: '🥦',
   limpieza: '🧹',
   otros: '📦',
@@ -58,26 +63,61 @@ export function selectCategory(id, label) {
 // ── Carga ─────────────────────────────────────
 export async function loadProducts() {
   gridEl.innerHTML = skeletons(6);
+
+  // 1. Consultar SOLO la versión y el estado del negocio (1 fila, 2 campos)
+  const { data: cfg, error: cfgError } = await supabase
+    .from('config_negocio')
+    .select('updated_at, abierto')
+    .eq('id', 1)
+    .single();
+
+  // Aplicar estado del negocio (abierto/cerrado) aunque el catálogo venga del caché
+  applyStoreStatus(cfg);
+
+  const remoteVersion = cfg?.updated_at ?? null;
+
+  // 2. Si tenemos caché válido y la versión coincide → no descargar nada más
+  if (!cfgError && remoteVersion) {
+    const cached = getCachedCatalog();
+    if (cached && cached.version === remoteVersion) {
+      state.allProducts = cached.products;
+      renderProducts();
+      return; // ✅ Salida rápida — 0 queries adicionales
+    }
+  }
+
+  // 3. Caché inválido, versión distinta o sin conexión → descargar catálogo completo
   const { data, error } = await supabase
     .from('productos')
     .select('*')
     .order('categoria')
     .order('nombre');
+
   if (error) {
+    // Sin red pero tenemos caché viejo → usarlo como fallback offline
+    const cached = getCachedCatalog();
+    if (cached) {
+      state.allProducts = cached.products;
+      renderProducts();
+      showToast('⚠️ Sin conexión — mostrando catálogo guardado');
+      return;
+    }
     gridEl.innerHTML = `<p style="color:red;padding:20px;grid-column:1/-1">Error al cargar productos. Verificá tu conexión.</p>`;
     return;
   }
+
+  // 4. Guardar en caché y actualizar estado
+  if (remoteVersion) setCatalogCache(data, remoteVersion);
   state.allProducts = data;
   renderProducts();
-  loadConfig();
 }
 
-async function loadConfig() {
-  const { data } = await supabase.from('config_negocio').select('abierto').eq('id', 1).single();
-  if (!data) return;
+function applyStoreStatus(cfg) {
+  if (!cfg) return;
   const badge = document.getElementById('status-badge');
   const txt = document.getElementById('status-text');
-  if (!data.abierto) {
+  if (!badge || !txt) return;
+  if (!cfg.abierto) {
     badge.classList.add('closed');
     badge.querySelector('.status-dot').style.animation = 'none';
     txt.textContent = 'Cerrado';
