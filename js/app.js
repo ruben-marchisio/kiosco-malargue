@@ -73,6 +73,33 @@ window.addEventListener('appinstalled', () => {
   state.deferredInstallPrompt = null;
 });
 
+// ── Compartir la app ──────────────────────────
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const shareData = {
+    title: 'Kiosco Digital — Colonia Hípica, Malargüe',
+    text: '🛍️ Mirá el kiosco de barrio online! Podés pedir y te lo traen a domicilio 🚴',
+    url: window.location.origin,
+  };
+
+  if (navigator.share) {
+    // Menú nativo del celular (Android/iOS)
+    try {
+      await navigator.share(shareData);
+    } catch (e) {
+      // El usuario canceló — no hacer nada
+      if (e.name !== 'AbortError') console.error(e);
+    }
+  } else {
+    // Fallback para desktop: copiar URL al portapapeles
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      showToast('🔗 Link copiado al portapapeles');
+    } catch {
+      showToast('📋 Copiá este link: ' + shareData.url);
+    }
+  }
+});
+
 // ── Inicialización ────────────────────────────
 initCategories();
 updateBadge();
