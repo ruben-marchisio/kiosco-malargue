@@ -77,8 +77,8 @@ window.addEventListener('appinstalled', () => {
 document.getElementById('share-btn').addEventListener('click', async () => {
   const shareData = {
     title: 'Kiosco Digital — Colonia Hípica, Malargüe',
-    text: '🛍️ Mirá el kiosco de barrio online! Podés pedir y te lo traen a domicilio 🚴',
-    url: window.location.origin,
+    text: '🛍️ ¡Instalate el kiosco de barrio en el celu! Pedís desde casa y te lo traen a domicilio 🚴',
+    url: window.location.origin + '/instalar',
   };
 
   if (navigator.share) {
