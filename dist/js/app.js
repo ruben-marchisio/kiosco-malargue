@@ -8,6 +8,7 @@ import { addToCart, changeQty, openCart, closeCart, updateBadge } from './cart.j
 import { closeCheckout } from './checkout.js';
 import { openSearch, closeSearch } from './search.js';
 import { loadProducts, initCategories } from './products.js';
+import { initHomeView, showHomeView } from './home.js';
 
 // ── Eventos CustomEvent (products → cart) ─────
 // products.js dispara estos eventos para evitar imports circulares
@@ -20,6 +21,7 @@ const overlay = document.getElementById('overlay');
 document.getElementById('nav-home').addEventListener('click', () => {
   closeCart();
   closeSearch();
+  showHomeView();
 });
 document.getElementById('nav-search').addEventListener('click', () => {
   closeCart();
@@ -34,6 +36,11 @@ document.getElementById('nav-cart').addEventListener('click', () => {
 document.getElementById('search-bar-trigger').addEventListener('click', openSearch);
 document.getElementById('search-cancel').addEventListener('click', closeSearch);
 document.getElementById('close-cart').addEventListener('click', closeCart);
+document.getElementById('back-to-home').addEventListener('click', () => {
+  closeCart();
+  closeSearch();
+  showHomeView();
+});
 overlay.addEventListener('click', () => {
   closeCart();
   closeSearch();
@@ -78,7 +85,7 @@ document.getElementById('share-btn').addEventListener('click', async () => {
   const shareData = {
     title: 'Kiosco Digital — Colonia Hípica, Malargüe',
     text: '🛍️ ¡Instalate el kiosco de barrio en el celu! Pedís desde casa y te lo traen a domicilio 🚴',
-    url: window.location.origin + '/instalar',
+    url: 'https://kiosco-malargue.rubenmarchisio-4e3.workers.dev/',
   };
 
   if (navigator.share) {
@@ -103,7 +110,8 @@ document.getElementById('share-btn').addEventListener('click', async () => {
 // ── Inicialización ────────────────────────────
 initCategories();
 updateBadge();
-loadProducts();
+loadProducts(); // carga en background — la home no espera esto
+initHomeView(); // muestra la pantalla de inicio
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(console.error);

@@ -19,6 +19,8 @@ export default [
         navigator: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
         sessionStorage: 'readonly',
         CustomEvent: 'readonly',
         Event: 'readonly',

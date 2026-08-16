@@ -148,6 +148,7 @@ function closeProductModal() {
 
 // ── CSV: constantes ───────────────────────────
 const VALID_CATS = new Set([
+  'combos',
   'bebidas',
   'alcohol',
   'snacks',
@@ -156,6 +157,10 @@ const VALID_CATS = new Set([
   'almacen',
   'verduleria',
   'limpieza',
+  'higiene',
+  'cigarrillos',
+  'mascota',
+  'libreria',
   'otros',
 ]);
 const CSV_TEMPLATE =

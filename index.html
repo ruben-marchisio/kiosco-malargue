@@ -26,6 +26,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
 
     <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/home.css" />
     <script src="/js/config.js"></script>
   </head>
   <body>
@@ -78,37 +79,58 @@
       </div>
     </header>
 
-    <!-- ── HERO ── -->
-    <section class="hero">
-      <div class="hero-inner">
-        <h1>¡Pedí desde casa! 🛍️</h1>
-        <p>Navegá el catálogo y confirmá tu pedido por WhatsApp</p>
-        <div class="hero-pills">
-          <span class="hero-pill">🚴 Envío a domicilio</span>
-          <span class="hero-pill">⚡ Sin registro</span>
-          <span class="hero-pill">💬 WhatsApp directo</span>
+    <!-- ── HOME VIEW ── -->
+    <div id="home-view" style="display: none">
+      <!-- Hero simplificado -->
+      <section class="hero">
+        <div class="hero-inner">
+          <h1>¡Pedí desde casa! 🛍️</h1>
+          <p>Navegá el catálogo y confirmá tu pedido por WhatsApp</p>
+          <div class="hero-pills">
+            <span class="hero-pill">🚴 Envío a domicilio</span>
+            <span class="hero-pill">⚡ Sin registro</span>
+            <span class="hero-pill">💬 WhatsApp directo</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Banners (extensible via Supabase en el futuro) -->
+      <div class="banners-wrap" id="banners-wrap"></div>
+
+      <!-- Grilla de categorías -->
+      <section class="home-cats-section">
+        <div class="home-cats-header">
+          <h2 class="home-cats-title">Explorá por categoría</h2>
+          <span class="home-cats-hint">Tocá para filtrar</span>
+        </div>
+        <div class="home-cats-grid" id="home-cats-grid"></div>
+      </section>
+    </div>
+
+    <!-- ── PRODUCTS VIEW ── -->
+    <div id="products-view" style="display: none">
+      <!-- Barra de regreso al inicio -->
+      <button class="products-back-bar" id="back-to-home" aria-label="Volver al inicio"><span>←</span> Inicio</button>
+
+      <!-- Search bar -->
+      <div class="search-wrap">
+        <div class="search-bar" id="search-bar-trigger" role="button" aria-label="Buscar productos">
+          <span class="search-icon">🔍</span>
+          <span style="flex: 1; color: var(--text-muted); font-size: 14px">Buscar productos...</span>
         </div>
       </div>
-    </section>
 
-    <!-- ── SEARCH BAR ── -->
-    <div class="search-wrap">
-      <div class="search-bar" id="search-bar-trigger" role="button" aria-label="Buscar productos">
-        <span class="search-icon">🔍</span>
-        <span style="flex: 1; color: var(--text-muted); font-size: 14px">Buscar productos...</span>
+      <!-- Categorías horizontales -->
+      <div class="categories">
+        <div class="cat-scroll" id="cat-scroll"></div>
       </div>
-    </div>
 
-    <!-- ── CATEGORIES ── -->
-    <div class="categories">
-      <div class="cat-scroll" id="cat-scroll"></div>
+      <!-- Grilla de productos -->
+      <main class="products-section">
+        <h2 class="section-title" id="section-title">🛍️ Todos los productos</h2>
+        <div class="products-grid" id="products-grid"></div>
+      </main>
     </div>
-
-    <!-- ── PRODUCTS ── -->
-    <main class="products-section">
-      <h2 class="section-title" id="section-title">🛍️ Todos los productos</h2>
-      <div class="products-grid" id="products-grid"></div>
-    </main>
 
     <!-- ── OVERLAY ── -->
     <div class="overlay" id="overlay"></div>

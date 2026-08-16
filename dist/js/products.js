@@ -8,8 +8,10 @@ import { fmt, skeletons, showToast } from './utils.js';
 import { getCachedCatalog, setCatalogCache } from './cache.js';
 
 // ── Constantes ────────────────────────────────
+// ⚠️ Estas categorías deben mantenerse sincronizadas con VALID_CATS en admin/js/stock.js
 export const CATS = [
   { id: 'todo', label: 'Todo', emoji: '🛍️' },
+  { id: 'combos', label: 'Combos', emoji: '🔥', featured: true },
   { id: 'bebidas', label: 'Bebidas', emoji: '🥤' },
   { id: 'alcohol', label: 'Con alcohol', emoji: '🍺' },
   { id: 'snacks', label: 'Snacks', emoji: '🍫' },
@@ -18,10 +20,15 @@ export const CATS = [
   { id: 'almacen', label: 'Almacén', emoji: '🏪' },
   { id: 'verduleria', label: 'Verdulería', emoji: '🥦' },
   { id: 'limpieza', label: 'Limpieza', emoji: '🧹' },
+  { id: 'higiene', label: 'Higiene', emoji: '🧴' },
+  { id: 'cigarrillos', label: 'Cigarrillos', emoji: '🚬' },
+  { id: 'mascota', label: 'Mascotas', emoji: '🐾' },
+  { id: 'libreria', label: 'Librería', emoji: '✏️' },
   { id: 'otros', label: 'Otros', emoji: '📦' },
 ];
 
 export const CAT_EMOJI = {
+  combos: '🔥',
   bebidas: '🥤',
   alcohol: '🍺',
   snacks: '🍫',
@@ -30,6 +37,10 @@ export const CAT_EMOJI = {
   almacen: '🏪',
   verduleria: '🥦',
   limpieza: '🧹',
+  higiene: '🧴',
+  cigarrillos: '🚬',
+  mascota: '🐾',
+  libreria: '✏️',
   otros: '📦',
 };
 
@@ -169,6 +180,7 @@ export function productCard(p) {
       </div>
       <div class="prod-info">
         <div class="prod-name">${p.nombre}</div>
+        ${p.marca ? `<div class="prod-brand">${p.marca}</div>` : ''}
         <div class="prod-bottom">
           <span class="prod-price">$${fmt(p.precio)}</span>
           ${actionHtml}

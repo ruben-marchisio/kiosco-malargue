@@ -5,6 +5,7 @@
    ============================================= */
 @import "./tokens.css";
 @import "./header.css";
+@import "./home.css";
 @import "./products.css";
 @import "./cart.css";
 @import "./navigation.css";

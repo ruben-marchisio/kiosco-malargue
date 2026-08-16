@@ -16,6 +16,10 @@ export const CAT_EMOJI = {
   almacen: '🏪',
   verduleria: '🥦',
   limpieza: '🧹',
+  higiene: '🧴',
+  cigarrillos: '🚬',
+  mascota: '🐾',
+  libreria: '✏️',
   otros: '📦',
 };
 

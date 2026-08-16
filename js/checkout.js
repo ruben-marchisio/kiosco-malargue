@@ -87,7 +87,10 @@ export function closeCheckout() {
 // ── Mensaje WhatsApp ──────────────────────────
 function buildWhatsApp(subtotal, envio, total, nombre, direccion, coords) {
   const lines = state.cart
-    .map((c) => `• ${c.qty}x ${c.nombre} — $${fmt(c.qty * c.precio)}`)
+    .map((c) => {
+      const marcaStr = c.marca ? ` (${c.marca})` : '';
+      return `• ${c.qty}x ${c.nombre}${marcaStr} — $${fmt(c.qty * c.precio)}`;
+    })
     .join('\n');
   let msg =
     `🛍️ *Pedido Kiosco Digital*\n\n${lines}\n\n` +

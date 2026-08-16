@@ -248,6 +248,7 @@
               <div class="field">
                 <label>Categoría *</label>
                 <select id="f-categoria" required>
+                  <option value="combos">🔥 Combos y Promos</option>
                   <option value="bebidas">🥤 Bebidas</option>
                   <option value="alcohol">🍺 Con alcohol</option>
                   <option value="snacks">🍫 Snacks y golosinas</option>
@@ -256,6 +257,10 @@
                   <option value="almacen">🏪 Almacén</option>
                   <option value="verduleria">🥦 Verdulería</option>
                   <option value="limpieza">🧹 Limpieza</option>
+                  <option value="higiene">🧴 Higiene</option>
+                  <option value="cigarrillos">🚬 Cigarrillos</option>
+                  <option value="mascota">🐾 Mascotas</option>
+                  <option value="libreria">✏️ Librería</option>
                   <option value="otros">📦 Otros</option>
                 </select>
               </div>
@@ -301,7 +306,8 @@
             <p>El archivo CSV debe tener estas columnas:</p>
             <code>nombre, marca, categoria, precio, descripcion</code>
             <p class="hint">
-              Categorías válidas: bebidas · snacks · comidas · panaderia · verduleria · limpieza · otros
+              Categorías válidas: combos · bebidas · alcohol · snacks · comidas · panaderia · almacen · verduleria ·
+              limpieza · higiene · cigarrillos · mascota · libreria · otros
             </p>
           </div>
           <div class="csv-actions">

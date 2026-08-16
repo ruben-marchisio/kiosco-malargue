@@ -42,6 +42,7 @@ export function addToCart(id) {
     state.cart.push({
       id,
       nombre: prod.nombre,
+      marca: prod.marca || null,
       precio: prod.precio,
       imagen_url: prod.imagen_url,
       categoria: prod.categoria,
