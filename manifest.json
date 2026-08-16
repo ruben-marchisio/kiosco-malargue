@@ -1,7 +1,7 @@
 {
-  "name": "Kiosco Digital Malargüe",
-  "short_name": "Kiosco",
-  "description": "Tu kiosco de barrio online — Colonia Hípica, Malargüe, Mendoza",
+  "name": "El Pechito",
+  "short_name": "El Pechito",
+  "description": "El Pechito — Tu kiosco de barrio online. Pedí desde casa, Colonia Hípica, Malargüe",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

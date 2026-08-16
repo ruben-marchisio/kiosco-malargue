@@ -1,5 +1,5 @@
 /* =============================================
-   Kiosco Digital — Punto de entrada principal
+   El Pechito — Punto de entrada principal
    Importa módulos y conecta eventos globales.
    ============================================= */
 
@@ -83,8 +83,8 @@ window.addEventListener('appinstalled', () => {
 // ── Compartir la app ──────────────────────────
 document.getElementById('share-btn').addEventListener('click', async () => {
   const shareData = {
-    title: 'Kiosco Digital — Colonia Hípica, Malargüe',
-    text: '🛍️ ¡Instalate el kiosco de barrio en el celu! Pedís desde casa y te lo traen a domicilio 🚴',
+    title: 'El Pechito — Pedidos a domicilio · Malargüe',
+    text: '🛍️ ¡Pedí en El Pechito desde el celu! Sin registro, sin app. Te lo traen a domicilio 🚴',
     url: 'https://kiosco-malargue.rubenmarchisio-4e3.workers.dev/',
   };
 

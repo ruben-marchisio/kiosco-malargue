@@ -32,7 +32,7 @@ import { CATS, selectCategory } from './products.js';
 const DEFAULT_BANNERS = [
   {
     id: 'bienvenida',
-    title: '¡Bienvenidos al Kiosco!',
+    title: '¡Bienvenidos a El Pechito! 🎉',
     subtitle: 'Pedí desde casa y te lo llevamos a domicilio 🚴',
     emoji: '🛍️',
     bgFrom: '#FF6B35',
