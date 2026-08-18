@@ -3,11 +3,12 @@
    ============================================= */
 
 import { state, saveCart } from './state.js';
-import { fmt, showToast, setNavActive } from './utils.js';
+import { fmt, setNavActive } from './utils.js';
 import { CAT_EMOJI, renderProducts } from './products.js';
 
 // ── DOM refs ──────────────────────────────────
 const navBadge = document.getElementById('nav-badge');
+const navTotal = document.getElementById('nav-total');
 const cartSheet = document.getElementById('cart-sheet');
 const overlay = document.getElementById('overlay');
 const cartItems = document.getElementById('cart-items');
@@ -17,11 +18,17 @@ const subtotalEl = document.getElementById('subtotal');
 const envioEl = document.getElementById('envio');
 const totalEl = document.getElementById('total');
 
-// ── Badge ─────────────────────────────────────
+// ── Badge + total en nav ──────────────────────
 export function updateBadge() {
   const total = state.cart.reduce((s, c) => s + c.qty, 0);
   navBadge.textContent = total;
   navBadge.style.display = total ? 'flex' : 'none';
+  // Total acumulado en el nav tab del carrito
+  if (navTotal) {
+    const monto = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
+    navTotal.textContent = total ? `$${fmt(monto)}` : '';
+    navTotal.style.display = total ? 'block' : 'none';
+  }
 }
 
 export function bumpBadge() {
@@ -29,6 +36,22 @@ export function bumpBadge() {
   void navBadge.offsetWidth; // forzar reflow para reiniciar animación
   navBadge.classList.add('bump');
   setTimeout(() => navBadge.classList.remove('bump'), 350);
+}
+
+// ── Toast con cantidad ────────────────────────
+let qtyToastTimer = null;
+function showQtyToast(nombre, qty) {
+  const el = document.getElementById('qty-toast');
+  if (!el) return;
+  el.querySelector('.qty-toast-name').textContent = nombre;
+  el.querySelector('.qty-toast-qty').textContent = `×${qty}`;
+  el.classList.remove('hide');
+  el.classList.add('show');
+  clearTimeout(qtyToastTimer);
+  qtyToastTimer = setTimeout(() => {
+    el.classList.add('hide');
+    setTimeout(() => el.classList.remove('show', 'hide'), 350);
+  }, 2500);
 }
 
 // ── Acciones de carrito ───────────────────────
@@ -51,7 +74,8 @@ export function addToCart(id) {
   }
   saveCart();
   updateBadge();
-  showToast(`✅ ${prod.nombre} agregado`);
+  const item = state.cart.find((c) => c.id === id);
+  showQtyToast(prod.nombre, item.qty);
   bumpBadge();
   renderProducts();
 }
@@ -67,6 +91,11 @@ export function changeQty(id, delta) {
   saveCart();
   updateBadge();
   bumpBadge();
+  // Mostrar toast de cantidad solo al sumar (delta > 0)
+  if (delta > 0) {
+    const updated = state.cart.find((c) => c.id === id);
+    if (updated) showQtyToast(updated.nombre, updated.qty);
+  }
   renderProducts();
   if (cartSheet.classList.contains('open')) renderCart();
 }

@@ -157,6 +157,9 @@ export function productCard(p) {
   const inCart = state.cart.find((c) => c.id === p.id);
   const qty = inCart ? inCart.qty : 0;
 
+  // El wrapper de imagen también suma al carrito
+  const imgAction = !p.disponible ? '' : qty > 0 ? `data-inc="${p.id}"` : `data-add="${p.id}"`;
+
   const imgHtml = p.imagen_url
     ? `<img class="prod-img" src="${p.imagen_url}" alt="${p.nombre}" loading="lazy">`
     : `<div class="prod-placeholder">${CAT_EMOJI[p.categoria] || '📦'}</div>`;
@@ -173,10 +176,11 @@ export function productCard(p) {
 
   return `
     <div class="product-card ${!p.disponible ? 'unavailable' : ''}">
-      <div class="prod-img-wrap">
+      <div class="prod-img-wrap ${p.disponible ? 'img-tappable' : ''}" ${imgAction} aria-label="${p.disponible ? 'Agregar ' + p.nombre : ''}">
         ${imgHtml}
         ${p.es_tercero ? `<span class="tercero-badge">Vecino</span>` : ''}
         ${!p.disponible ? `<div class="unavail-overlay">Sin stock</div>` : ''}
+        ${p.disponible ? `<div class="img-add-hint">＋</div>` : ''}
       </div>
       <div class="prod-info">
         <div class="prod-name">${p.nombre}</div>
@@ -190,22 +194,21 @@ export function productCard(p) {
 }
 
 export function bindProductEvents(container) {
-  container
-    .querySelectorAll('[data-add]')
-    .forEach((btn) =>
-      btn.addEventListener('click', () =>
-        document.dispatchEvent(new CustomEvent('kiosco:addToCart', { detail: btn.dataset.add }))
-      )
-    );
-  container
-    .querySelectorAll('[data-inc]')
-    .forEach((btn) =>
-      btn.addEventListener('click', () =>
-        document.dispatchEvent(
-          new CustomEvent('kiosco:changeQty', { detail: { id: btn.dataset.inc, delta: 1 } })
-        )
-      )
-    );
+  // Botones explícitos de agregar
+  container.querySelectorAll('[data-add]').forEach((el) =>
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.dispatchEvent(new CustomEvent('kiosco:addToCart', { detail: el.dataset.add }));
+    })
+  );
+  container.querySelectorAll('[data-inc]').forEach((el) =>
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.dispatchEvent(
+        new CustomEvent('kiosco:changeQty', { detail: { id: el.dataset.inc, delta: 1 } })
+      );
+    })
+  );
   container
     .querySelectorAll('[data-dec]')
     .forEach((btn) =>

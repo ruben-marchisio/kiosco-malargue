@@ -100,20 +100,73 @@
             </div>
           </div>
           <div class="page-content">
-            <!-- Buscador -->
-            <div class="search-wrap">
-              <span class="search-icon">🔍</span>
-              <input
-                type="search"
-                id="stock-search"
-                class="search-input"
-                placeholder="Buscar por nombre, marca o categoría..."
-                autocomplete="off"
-              />
+            <!-- Filtros: buscador + categoría -->
+            <div class="filter-bar">
+              <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input
+                  type="search"
+                  id="stock-search"
+                  class="search-input"
+                  placeholder="Buscar por nombre, marca o categoría..."
+                  autocomplete="off"
+                />
+              </div>
+              <div class="cat-filter-wrap">
+                <span class="cat-filter-icon">🏷️</span>
+                <select id="stock-cat-filter" class="cat-filter-select">
+                  <option value="">Todas las categorías</option>
+                  <option value="combos">🔥 Combos y Promos</option>
+                  <option value="bebidas">🥤 Bebidas</option>
+                  <option value="alcohol">🍺 Con alcohol</option>
+                  <option value="snacks">🍫 Snacks y golosinas</option>
+                  <option value="comidas">🍽️ Comidas</option>
+                  <option value="panaderia">🥐 Panadería</option>
+                  <option value="almacen">🏪 Almacén</option>
+                  <option value="verduleria">🥦 Verdulería</option>
+                  <option value="limpieza">🧹 Limpieza</option>
+                  <option value="higiene">🧴 Higiene</option>
+                  <option value="cigarrillos">🚬 Cigarrillos</option>
+                  <option value="mascota">🐾 Mascotas</option>
+                  <option value="libreria">✏️ Librería</option>
+                  <option value="otros">📦 Otros</option>
+                </select>
+              </div>
             </div>
-            <!-- Tabla -->
-            <div class="card">
-              <div class="card-head"><h3>Todos los productos</h3></div>
+
+            <!-- Tabla: sin stock (primero para visibilidad) -->
+            <div class="card card-sinstock" id="card-sinstock">
+              <div class="card-head">
+                <h3>⚠️ Sin stock</h3>
+                <span class="badge-count badge-count--warning" id="count-sinstock">—</span>
+              </div>
+              <div style="overflow-x: auto">
+                <table class="prod-table">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Marca</th>
+                      <th>Categoría</th>
+                      <th>Precio</th>
+                      <th>Disponible</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sinstock-tbody">
+                    <tr>
+                      <td colspan="6" class="table-placeholder">Cargando...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla: disponibles -->
+            <div class="card" style="margin-top: 20px">
+              <div class="card-head">
+                <h3>✅ Productos disponibles</h3>
+                <span class="badge-count" id="count-disponibles">—</span>
+              </div>
               <div style="overflow-x: auto">
                 <table class="prod-table">
                   <thead>
@@ -270,8 +323,18 @@
               </div>
             </div>
             <div class="field">
-              <label>URL de imagen (opcional)</label>
-              <input type="url" id="f-imagen" placeholder="https://..." />
+              <label>Imagen del producto (opcional)</label>
+              <div class="imagen-input-wrap">
+                <input type="url" id="f-imagen" placeholder="Pegar URL de imagen (https://...)" />
+                <span class="imagen-sep">ó</span>
+                <label class="btn btn-secondary btn-upload" for="f-imagen-file">📁 Subir desde PC</label>
+                <input type="file" id="f-imagen-file" accept="image/*" style="display: none" />
+              </div>
+              <div id="imagen-preview-wrap" style="display: none">
+                <img id="imagen-preview" src="" alt="Preview" />
+                <button type="button" class="btn-remove-img" id="imagen-remove">✕ Quitar imagen</button>
+              </div>
+              <div id="imagen-upload-status" class="upload-status" style="display: none"></div>
             </div>
             <div class="checkbox-group">
               <input type="checkbox" id="f-tercero" />

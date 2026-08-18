@@ -10,8 +10,9 @@ import { closeCart, updateBadge } from './cart.js';
 // ── DOM refs ──────────────────────────────────
 const checkoutSheet = document.getElementById('checkout-sheet');
 const overlay = document.getElementById('overlay');
-const checkoutNameInput = document.getElementById('checkout-name');
-const checkoutAddrInput = document.getElementById('checkout-address');
+const nameInput = document.getElementById('checkout-name');
+const addrInput = document.getElementById('checkout-address');
+const callesInput = document.getElementById('checkout-calles');
 const locationBtn = document.getElementById('location-btn');
 const locationBtnText = document.getElementById('location-btn-text');
 const locationHint = document.getElementById('location-hint');
@@ -23,6 +24,11 @@ function resetLocationBtn() {
   locationBtn.className = 'location-btn';
   locationBtnText.textContent = 'Compartir mi ubicación GPS';
   locationHint.textContent = 'Opcional · Se enviará un link de Google Maps en el mensaje';
+}
+
+function getPayMethod() {
+  const sel = document.querySelector('input[name="pago"]:checked');
+  return sel ? sel.value : null;
 }
 
 // ── GPS ───────────────────────────────────────
@@ -65,16 +71,22 @@ locationBtn.addEventListener('click', () => {
 
 // ── Sheet open / close ────────────────────────
 export function openCheckout() {
-  checkoutNameInput.value = localStorage.getItem('kiosco_nombre') || '';
-  checkoutAddrInput.value = localStorage.getItem('kiosco_direccion') || '';
+  nameInput.value = localStorage.getItem('kiosco_nombre') || '';
+  addrInput.value = localStorage.getItem('kiosco_direccion') || '';
+  callesInput.value = localStorage.getItem('kiosco_calles') || '';
   gpsCoords = null;
   resetLocationBtn();
+  // Restaurar método de pago guardado
+  const savedPago = localStorage.getItem('kiosco_pago') || 'efectivo';
+  const pagoRadio = document.querySelector(`input[name="pago"][value="${savedPago}"]`);
+  if (pagoRadio) pagoRadio.checked = true;
+
   checkoutSheet.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   setTimeout(() => {
-    if (!checkoutNameInput.value) checkoutNameInput.focus();
-    else if (!checkoutAddrInput.value) checkoutAddrInput.focus();
+    if (!nameInput.value) nameInput.focus();
+    else if (!addrInput.value) addrInput.focus();
   }, 380);
 }
 
@@ -85,42 +97,62 @@ export function closeCheckout() {
 }
 
 // ── Mensaje WhatsApp ──────────────────────────
-function buildWhatsApp(subtotal, envio, total, nombre, direccion, coords) {
+function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, pago, coords) {
+  const sep = '─────────────────────';
+  const sep2 = '═════════════════════';
+
   const lines = state.cart
     .map((c) => {
       const marcaStr = c.marca ? ` (${c.marca})` : '';
-      return `• ${c.qty}x ${c.nombre}${marcaStr} — $${fmt(c.qty * c.precio)}`;
+      return `  • ${c.qty}× ${c.nombre}${marcaStr}\n    💰 $${fmt(c.qty * c.precio)}`;
     })
     .join('\n');
-  let msg =
-    `🛍️ *Pedido Kiosco Digital*\n\n${lines}\n\n` +
-    `*Subtotal:* $${fmt(subtotal)}\n` +
-    `*Envío:* $${fmt(envio)}\n` +
-    `*TOTAL: $${fmt(total)}*\n\n`;
 
-  if (nombre) msg += `👤 *Nombre:* ${nombre}\n`;
+  const pagoEmoji = pago === 'transferencia' ? '💳' : '💵';
+  const pagoLabel = pago === 'transferencia' ? 'Transferencia' : 'Efectivo';
+
+  let msg =
+    `🛒 *Pedido — Kiosco Digital El Pechito*\n` +
+    `📍 Malargüe, Mendoza\n` +
+    `${sep}\n\n` +
+    `🧺 *Detalle del pedido:*\n${lines}\n\n` +
+    `${sep}\n` +
+    `📦 *Subtotal:*  $${fmt(subtotal)}\n` +
+    `🚴 *Delivery:*  $${fmt(envio)}\n` +
+    `${sep2}\n` +
+    `✅ *TOTAL:  $${fmt(total)}*\n` +
+    `${sep}\n\n` +
+    `👤 *Cliente:* ${nombre || '—'}\n`;
+
   if (direccion) msg += `🏠 *Dirección:* ${direccion}\n`;
+  if (calles) msg += `↔️ *Entre calles:* ${calles}\n`;
+
   if (coords) {
     msg += `📍 *Ubicación GPS:* https://maps.google.com/?q=${coords.lat},${coords.lng}\n`;
-  } else {
-    msg += `📍 *Mi dirección:* `;
   }
+
+  msg += `${pagoEmoji} *Pago:* ${pagoLabel}\n`;
+
   return `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`;
 }
 
 // ── Confirmar pedido ──────────────────────────
 function submitOrder() {
-  const nombre = checkoutNameInput.value.trim();
-  const direccion = checkoutAddrInput.value.trim();
+  const nombre = nameInput.value.trim();
+  const direccion = addrInput.value.trim();
+  const calles = callesInput.value.trim();
+  const pago = getPayMethod() || 'efectivo';
 
   if (nombre) localStorage.setItem('kiosco_nombre', nombre);
   if (direccion) localStorage.setItem('kiosco_direccion', direccion);
+  if (calles) localStorage.setItem('kiosco_calles', calles);
+  localStorage.setItem('kiosco_pago', pago);
 
   const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
   const envio = PRECIO_ENVIO;
 
   window.open(
-    buildWhatsApp(subtotal, envio, subtotal + envio, nombre, direccion, gpsCoords),
+    buildWhatsApp(subtotal, envio, subtotal + envio, nombre, direccion, calles, pago, gpsCoords),
     '_blank',
     'noopener,noreferrer'
   );

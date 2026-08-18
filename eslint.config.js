@@ -27,6 +27,7 @@ export default [
         Blob: 'readonly',
         URL: 'readonly',
         FileReader: 'readonly',
+        createImageBitmap: 'readonly',
         // Globals del proyecto (definidos en config.js)
         SUPABASE_URL: 'readonly',
         SUPABASE_ANON: 'readonly',

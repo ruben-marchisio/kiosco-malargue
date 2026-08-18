@@ -347,6 +347,61 @@
   flex-shrink: 0;
 }
 
+/* ── Método de pago ──────────────────────────── */
+.checkout-pago {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.checkout-pago-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.pago-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.pago-option {
+  cursor: pointer;
+}
+.pago-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.pago-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--bg);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.pago-option input[type="radio"]:checked + .pago-card {
+  border-color: var(--primary);
+  background: #fff3e8;
+  box-shadow: 0 2px 12px rgba(255, 107, 53, 0.2);
+}
+[data-theme="dark"] .pago-option input[type="radio"]:checked + .pago-card {
+  background: rgba(255, 107, 53, 0.12);
+}
+.pago-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.pago-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
 /* ── Desktop panel lateral ───────────────────── */
 @media (min-width: 768px) {
   .cart-sheet,

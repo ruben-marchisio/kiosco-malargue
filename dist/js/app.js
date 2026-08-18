@@ -80,29 +80,35 @@ window.addEventListener('appinstalled', () => {
   state.deferredInstallPrompt = null;
 });
 
-// ── Compartir la app ──────────────────────────
+// ── Compartir la app ─────────────────────
 document.getElementById('share-btn').addEventListener('click', async () => {
+  const url = 'https://kiosco-malargue.rubenmarchisio-4e3.workers.dev/';
   const shareData = {
-    title: 'El Pechito — Pedidos a domicilio · Malargüe',
-    text: '🛍️ ¡Pedí en El Pechito desde el celu! Sin registro, sin app. Te lo traen a domicilio 🚴',
-    url: 'https://kiosco-malargue.rubenmarchisio-4e3.workers.dev/',
+    title: 'El Pechito — Kiosco online en Malargüe',
+    text:
+      '🏠 *El Pechito — Kiosco Digital | Malargüe, Mendoza*\n\n' +
+      '🛒 Pedí desde tu casa sin registrarte.\n' +
+      'Navégá el catálogo y confirmá tu pedido por WhatsApp.\n' +
+      '🚴 Delivery a domicilio en Malargüe.\n\n' +
+      '👥 Rubén Alejandro Marchisio Galdón\n' +
+      '📲 Consultá al: +54 9 2604 055 198\n\n' +
+      '📲 Instalá la app en tu celu para acceder más rápido:\n' +
+      url,
+    url,
   };
 
   if (navigator.share) {
-    // Menú nativo del celular (Android/iOS)
     try {
       await navigator.share(shareData);
     } catch (e) {
-      // El usuario canceló — no hacer nada
       if (e.name !== 'AbortError') console.error(e);
     }
   } else {
-    // Fallback para desktop: copiar URL al portapapeles
     try {
-      await navigator.clipboard.writeText(shareData.url);
+      await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}`);
       showToast('🔗 Link copiado al portapapeles');
     } catch {
-      showToast('📋 Copiá este link: ' + shareData.url);
+      showToast('📋 Copiá este link: ' + url);
     }
   }
 });

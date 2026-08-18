@@ -162,3 +162,75 @@
   background: #2e2e2e;
   border: 1px solid #444;
 }
+
+/* ── Total acumulado en nav Carrito ─────────── */
+.nav-total {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  margin-top: 1px;
+  letter-spacing: -0.3px;
+}
+
+/* ── Qty Toast (nombre × cantidad) ──────────── */
+.qty-toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 40px;
+  padding: 10px 18px 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 490;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  max-width: calc(100vw - 40px);
+}
+.qty-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.qty-toast.hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+.qty-toast-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.qty-toast-name {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.qty-toast-qty {
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .qty-toast {
+  background: #1e1e1e;
+  border-color: #333;
+  border-left-color: var(--primary);
+}
