@@ -6,6 +6,7 @@ import { supabase } from './api.js';
 import { state } from './state.js';
 import { fmt, skeletons, showToast } from './utils.js';
 import { getCachedCatalog, setCatalogCache } from './cache.js';
+import { initFromConfig } from './store-status.js';
 
 // ── Constantes ────────────────────────────────
 // ⚠️ Estas categorías deben mantenerse sincronizadas con VALID_CATS en admin/js/stock.js
@@ -75,15 +76,15 @@ export function selectCategory(id, label) {
 export async function loadProducts() {
   gridEl.innerHTML = skeletons(6);
 
-  // 1. Consultar SOLO la versión y el estado del negocio (1 fila, 2 campos)
+  // 1. Consultar la versión y estado completo del negocio (1 fila)
   const { data: cfg, error: cfgError } = await supabase
     .from('config_negocio')
-    .select('updated_at, abierto')
+    .select('updated_at, stock_version, abierto, motivo_cierre, mensaje_cierre, hora_reapertura')
     .eq('id', 1)
     .single();
 
-  // Aplicar estado del negocio (abierto/cerrado) aunque el catálogo venga del caché
-  applyStoreStatus(cfg);
+  // Inicializar store-status con los datos ya consultados (sin query extra)
+  initFromConfig(cfg, cfg?.updated_at ?? null);
 
   const remoteVersion = cfg?.updated_at ?? null;
 
@@ -123,17 +124,7 @@ export async function loadProducts() {
   renderProducts();
 }
 
-function applyStoreStatus(cfg) {
-  if (!cfg) return;
-  const badge = document.getElementById('status-badge');
-  const txt = document.getElementById('status-text');
-  if (!badge || !txt) return;
-  if (!cfg.abierto) {
-    badge.classList.add('closed');
-    badge.querySelector('.status-dot').style.animation = 'none';
-    txt.textContent = 'Cerrado';
-  }
-}
+// applyStoreStatus eliminado — store-status.js maneja el badge via initFromConfig()
 
 // ── Render ────────────────────────────────────
 export function renderProducts(list = null) {

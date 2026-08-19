@@ -7,7 +7,7 @@ import './theme.js';
 import { addToCart, changeQty, openCart, closeCart, updateBadge } from './cart.js';
 import { closeCheckout } from './checkout.js';
 import { openSearch, closeSearch } from './search.js';
-import { loadProducts, initCategories } from './products.js';
+import { loadProducts, initCategories, renderProducts } from './products.js';
 import { initHomeView, showHomeView } from './home.js';
 
 // ── Eventos CustomEvent (products → cart) ─────
@@ -116,8 +116,13 @@ document.getElementById('share-btn').addEventListener('click', async () => {
 // ── Inicialización ────────────────────────────
 initCategories();
 updateBadge();
-loadProducts(); // carga en background — la home no espera esto
-initHomeView(); // muestra la pantalla de inicio
+loadProducts(); // consulta config_negocio → initFromConfig → badge + modal + listeners
+initHomeView();
+
+// ── Eventos de sincronización diferencial ─────
+// store-status.js dispara estos cuando detecta cambios remotos
+document.addEventListener('kiosco:stockPatched', () => renderProducts());
+document.addEventListener('kiosco:catalogChanged', () => loadProducts());
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(console.error);

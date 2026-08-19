@@ -243,6 +243,81 @@
         <div class="page" id="page-config" style="display: none">
           <div class="page-header"><h2>⚙️ Configuración</h2></div>
           <div class="page-content">
+            <!-- ── Panel de estado del local ── -->
+            <div class="store-toggle-card" id="store-toggle-card">
+              <div class="store-toggle-header">
+                <div class="store-toggle-info">
+                  <span class="store-toggle-emoji" id="store-toggle-emoji">🟢</span>
+                  <div>
+                    <div class="store-toggle-label" id="store-toggle-label">Local abierto</div>
+                    <div class="store-toggle-sub" id="store-toggle-sub">Los clientes pueden realizar pedidos</div>
+                  </div>
+                </div>
+                <label class="toggle-lg" title="Abrir / cerrar el local">
+                  <input type="checkbox" id="c-abierto" />
+                  <span class="toggle-lg-slider"></span>
+                </label>
+              </div>
+
+              <!-- Opciones de cierre (visible solo cuando está cerrado) -->
+              <div class="store-close-options" id="store-close-options">
+                <div class="close-options-title">Motivo del cierre</div>
+                <div class="templates-grid">
+                  <button
+                    type="button"
+                    class="template-btn active"
+                    data-motivo="horario"
+                    data-msg="Cerrado por fuera del horario de atención. Volvemos a las 9:00."
+                    id="tpl-horario"
+                  >
+                    <span class="template-emoji">🌙</span>
+                    <span class="template-text">Fuera de horario</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="template-btn"
+                    data-motivo="clima"
+                    data-msg="Debido a las condiciones climáticas, el servicio de delivery está suspendido temporalmente."
+                    id="tpl-clima"
+                  >
+                    <span class="template-emoji">🌧️</span>
+                    <span class="template-text">Clima</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="template-btn"
+                    data-motivo="delivery"
+                    data-msg="Estamos teniendo una demora con el servicio de delivery. Estimamos retomar los pedidos pronto."
+                    id="tpl-delivery"
+                  >
+                    <span class="template-emoji">🛵</span>
+                    <span class="template-text">Demora delivery</span>
+                  </button>
+                  <button type="button" class="template-btn" data-motivo="otro" data-msg="" id="tpl-otro">
+                    <span class="template-emoji">⏸️</span>
+                    <span class="template-text">Otro motivo</span>
+                  </button>
+                </div>
+
+                <div class="field">
+                  <label for="c-hora-reap">🕐 Hora estimada de reapertura (opcional)</label>
+                  <input type="time" id="c-hora-reap" placeholder="09:00" />
+                </div>
+
+                <div class="field">
+                  <label for="c-mensaje-cierre">✏️ Mensaje personalizado (opcional)</label>
+                  <textarea
+                    id="c-mensaje-cierre"
+                    rows="3"
+                    placeholder="Ej: Estamos de vacaciones. Volvemos el lunes a las 9:00. ¡Gracias por su paciencia!"
+                    spellcheck="true"
+                    lang="es"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Datos del negocio ── -->
             <div class="card">
               <div class="card-head"><h3>Datos del negocio</h3></div>
               <div style="padding: 20px">
@@ -258,10 +333,6 @@
                   <div class="field">
                     <label>Precio de envío ($)</label>
                     <input type="number" id="c-envio" placeholder="500" min="0" />
-                  </div>
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="c-abierto" />
-                    <label for="c-abierto">Negocio abierto (visible en la tienda)</label>
                   </div>
                   <button type="submit" class="btn btn-primary">💾 Guardar configuración</button>
                 </form>

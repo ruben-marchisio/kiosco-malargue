@@ -6,6 +6,7 @@
 
 const CATALOG_KEY = 'kiosco_catalog_v1';
 const VERSION_KEY = 'kiosco_catalog_version';
+const STOCK_VER_KEY = 'kiosco_stock_version';
 const MAX_AGE_MS = 1000 * 60 * 60 * 24; // 24 h — fallback de seguridad
 
 /**
@@ -44,16 +45,48 @@ export function setCatalogCache(products, version) {
     localStorage.setItem(CATALOG_KEY, JSON.stringify({ products, savedAt: Date.now() }));
     localStorage.setItem(VERSION_KEY, version);
   } catch (e) {
-    // Si localStorage está lleno (quota exceeded) simplemente no cacheamos
-    console.warn('[cache] No se pudo guardar el catálogo en localStorage:', e.message);
+    console.warn('[cache] No se pudo guardar el catálogo:', e.message);
   }
 }
 
 /**
- * Elimina el caché del catálogo.
- * Llamar desde Admin cada vez que se modifica el catálogo.
+ * Versión de stock (se incrementa en Supabase cuando cambia disponible).
+ */
+export function getStockVersion() {
+  return localStorage.getItem(STOCK_VER_KEY);
+}
+
+export function setStockVersion(v) {
+  localStorage.setItem(STOCK_VER_KEY, String(v));
+}
+
+/**
+ * Parchea el campo 'disponible' en el caché local sin re-descargar todo.
+ * No toca nombres, precios ni imágenes.
+ * @param {{ [id: string]: boolean }} stockMap - id → disponible
+ */
+export function patchStockInCache(stockMap) {
+  try {
+    const raw = localStorage.getItem(CATALOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.products) return;
+    parsed.products = parsed.products.map((p) =>
+      Object.prototype.hasOwnProperty.call(stockMap, p.id)
+        ? { ...p, disponible: stockMap[p.id] }
+        : p
+    );
+    localStorage.setItem(CATALOG_KEY, JSON.stringify(parsed));
+  } catch (e) {
+    console.warn('[cache] Error al parchear stock:', e.message);
+  }
+}
+
+/**
+ * Elimina el caché del catálogo (catálogo + versiones).
  */
 export function clearCatalogCache() {
   localStorage.removeItem(CATALOG_KEY);
   localStorage.removeItem(VERSION_KEY);
+  localStorage.removeItem(STOCK_VER_KEY);
 }

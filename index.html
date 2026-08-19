@@ -27,6 +27,7 @@
 
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/css/home.css" />
+    <link rel="stylesheet" href="/css/store-status.css" />
     <script src="/js/config.js"></script>
   </head>
   <body>
@@ -132,6 +133,29 @@
       </main>
     </div>
 
+    <!-- ── STORE CLOSED MODAL ── -->
+    <div class="store-closed-modal" id="store-closed-modal" role="dialog" aria-modal="true" aria-label="Local cerrado">
+      <div class="scm-card">
+        <div class="scm-handle"></div>
+        <div class="scm-header">
+          <div class="scm-icon-wrap">
+            <span id="scm-icon">🌙</span>
+          </div>
+          <div class="scm-title-wrap">
+            <div class="scm-eyebrow">Local cerrado</div>
+            <div class="scm-title" id="scm-title">Fuera de horario</div>
+          </div>
+        </div>
+        <p class="scm-message" id="scm-message">Cerrado. Volvemos a abrir a las 9:00.</p>
+        <div class="scm-reopen" id="scm-reopen" style="display: none">
+          <span class="scm-reopen-icon">🕘</span>
+          <span>Reapertura estimada: <strong class="scm-reopen-time"></strong></span>
+        </div>
+        <button class="scm-btn" id="scm-btn" type="button">Entendido</button>
+        <p class="scm-hint">Podés seguir navegando el catálogo 🛍️</p>
+      </div>
+    </div>
+
     <!-- ── OVERLAY ── -->
     <div class="overlay" id="overlay"></div>
 
@@ -172,6 +196,14 @@
         <button class="close-btn" id="close-checkout" aria-label="Cerrar">✕</button>
       </div>
       <div class="checkout-body">
+        <!-- Aviso local cerrado -->
+        <div class="checkout-closed-banner" id="checkout-closed-banner">
+          <span class="ccb-icon" id="ccb-icon">🔴</span>
+          <div class="ccb-text">
+            <div class="ccb-title">El local está cerrado</div>
+            <p class="ccb-msg" id="ccb-msg">No podemos recibir pedidos en este momento.</p>
+          </div>
+        </div>
         <p class="checkout-intro">
           Completá tus datos para coordinar la entrega 🚴 — <strong>El Pechito · Malargüe</strong>
         </p>

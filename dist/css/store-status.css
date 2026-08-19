@@ -1,0 +1,460 @@
+/* =============================================
+   STORE STATUS — Modal de local cerrado
+   ============================================= */
+
+/* ── Modal overlay ───────────────────────────── */
+.store-closed-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.35s ease;
+}
+
+.store-closed-modal.open {
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+
+/* ── Tarjeta ─────────────────────────────────── */
+.scm-card {
+  background: var(--surface);
+  border-radius: 24px 24px 20px 20px;
+  padding: 28px 24px 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow:
+    0 -4px 40px rgba(0, 0, 0, 0.18),
+    0 24px 60px rgba(0, 0, 0, 0.2);
+  transform: translateY(110%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Banda decorativa superior */
+.scm-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  border-radius: 4px 4px 0 0;
+}
+
+.store-closed-modal.open .scm-card {
+  transform: translateY(0);
+}
+
+/* Pill handle */
+.scm-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  margin: 0 auto 20px;
+}
+
+/* ── Encabezado ──────────────────────────────── */
+.scm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.scm-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .scm-icon-wrap {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+}
+
+.scm-title-wrap {
+}
+
+.scm-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #ef4444;
+  margin-bottom: 2px;
+}
+
+.scm-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+/* ── Mensaje ─────────────────────────────────── */
+.scm-message {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-left: 3px solid #ef4444;
+}
+
+/* ── Reapertura ──────────────────────────────── */
+.scm-reopen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 9px 13px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #166534;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .scm-reopen {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+
+.scm-reopen-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.scm-reopen-time {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+/* ── Botón ───────────────────────────────────── */
+.scm-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35);
+}
+
+.scm-btn:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45);
+}
+
+.scm-btn:active {
+  transform: scale(0.97);
+}
+
+/* Hint catalogo */
+.scm-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+/* ── Aviso inline en el checkout (si se intenta igual) ── */
+.checkout-closed-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  animation: fadeInBanner 0.25s ease;
+}
+
+[data-theme="dark"] .checkout-closed-banner {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.checkout-closed-banner.show {
+  display: flex;
+}
+
+@keyframes fadeInBanner {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ccb-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.ccb-text {
+  flex: 1;
+}
+
+.ccb-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #991b1b;
+  margin-bottom: 1px;
+}
+
+.ccb-msg {
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+[data-theme="dark"] .ccb-title,
+[data-theme="dark"] .ccb-msg {
+  color: #fca5a5;
+}
+
+/* ── Panel de estado en el admin sidebar ─────── */
+.store-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: default;
+  margin: 0 16px 12px;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.store-status-pill.open {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.store-status-pill.closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.store-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.store-status-pill.open .store-status-dot {
+  animation: blink-admin 2s infinite;
+}
+
+@keyframes blink-admin {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ── Config: panel de cierre ─────────────────── */
+.store-toggle-card {
+  background: white;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease;
+}
+
+.store-toggle-card.is-closed {
+  border-color: #fca5a5;
+}
+
+.store-toggle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  gap: 16px;
+}
+
+.store-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.store-toggle-emoji {
+  font-size: 28px;
+}
+
+.store-toggle-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.store-toggle-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* Toggle switch grande para el admin */
+.toggle-lg {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.toggle-lg input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-lg-slider {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 30px;
+  transition: background 0.25s ease;
+  cursor: pointer;
+}
+
+.toggle-lg-slider::before {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-lg input:checked + .toggle-lg-slider {
+  background: #10b981;
+}
+
+.toggle-lg input:checked + .toggle-lg-slider::before {
+  transform: translateX(26px);
+}
+
+/* Panel de cierre expandido */
+.store-close-options {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+  display: none;
+  animation: expandDown 0.2s ease;
+}
+
+.store-close-options.show {
+  display: block;
+}
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-options-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 0 10px;
+}
+
+/* Plantillas de mensaje */
+.templates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 480px) {
+  .templates-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.template-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.template-btn:hover {
+  border-color: var(--primary);
+  background: #fff3e8;
+  color: var(--primary);
+}
+
+.template-btn.active {
+  border-color: var(--primary);
+  background: #fff3e8;
+  color: var(--primary);
+}
+
+.template-emoji {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.template-text {
+  line-height: 1.3;
+}

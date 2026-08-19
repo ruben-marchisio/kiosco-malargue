@@ -6,6 +6,9 @@ import { state, saveCart } from './state.js';
 import { fmt, showToast } from './utils.js';
 import { renderProducts } from './products.js';
 import { closeCart, updateBadge } from './cart.js';
+import { isStoreClosed, showClosedModal, storeStatus } from './store-status.js';
+import { supabase } from './api.js';
+import { patchStockInCache } from './cache.js';
 
 // ── DOM refs ──────────────────────────────────
 const checkoutSheet = document.getElementById('checkout-sheet');
@@ -81,6 +84,22 @@ export function openCheckout() {
   const pagoRadio = document.querySelector(`input[name="pago"][value="${savedPago}"]`);
   if (pagoRadio) pagoRadio.checked = true;
 
+  // — Mostrar aviso si el local está cerrado
+  const banner = document.getElementById('checkout-closed-banner');
+  const ccbMsg = document.getElementById('ccb-msg');
+  const ccbIcon = document.getElementById('ccb-icon');
+  if (isStoreClosed()) {
+    const motivos = { horario: '🌙', clima: '🌧️', delivery: '🛕', otro: '⏸️' };
+    ccbIcon.textContent = motivos[storeStatus.motivo] || '🔴';
+    const defaultMsg = storeStatus.reapertura
+      ? `Cerrado temporalmente. Reapertura estimada: ${storeStatus.reapertura}.`
+      : 'No podemos recibir pedidos en este momento.';
+    ccbMsg.textContent = storeStatus.mensaje || defaultMsg;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+
   checkoutSheet.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -136,8 +155,59 @@ function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, pago, 
   return `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`;
 }
 
-// ── Confirmar pedido ──────────────────────────
-function submitOrder() {
+// ── Validación pre-pedido ────────────────────────────────────
+async function validateOrder() {
+  // 1. Verif estado del local (usa estado local — sin query)
+  if (isStoreClosed()) {
+    showClosedModal();
+    return false;
+  }
+
+  // 2. Verif stock del carrito (query batch)
+  const ids = state.cart.map((c) => c.id);
+  if (!ids.length) return true;
+
+  const { data, error } = await supabase
+    .from('productos')
+    .select('id, nombre, disponible')
+    .in('id', ids);
+
+  if (error) return true; // sin conexión: permitir el pedido con aviso
+
+  // Parchar caché con datos frescos
+  const stockMap = {};
+  data.forEach((p) => {
+    stockMap[p.id] = p.disponible;
+  });
+  patchStockInCache(stockMap);
+  state.allProducts = state.allProducts.map((p) =>
+    Object.prototype.hasOwnProperty.call(stockMap, p.id) ? { ...p, disponible: stockMap[p.id] } : p
+  );
+
+  const sinStock = data.filter((p) => !p.disponible);
+  if (sinStock.length) {
+    const nombres = sinStock.map((p) => p.nombre).join(', ');
+    showToast(`⚠️ Sin stock: ${nombres}`);
+    // Quitar del carrito los productos agotados
+    sinStock.forEach((p) => {
+      const idx = state.cart.findIndex((c) => c.id === p.id);
+      if (idx !== -1) state.cart.splice(idx, 1);
+    });
+    saveCart();
+    updateBadge();
+    renderProducts();
+    closeCheckout();
+    return false;
+  }
+
+  return true;
+}
+
+// ── Confirmar pedido ────────────────────────────────────
+async function submitOrder() {
+  const valido = await validateOrder();
+  if (!valido) return;
+
   const nombre = nameInput.value.trim();
   const direccion = addrInput.value.trim();
   const calles = callesInput.value.trim();
@@ -167,7 +237,7 @@ function submitOrder() {
   showToast('🎉 ¡Pedido enviado! Tu carrito fue vaciado');
 }
 
-// ── Eventos ───────────────────────────────────
+// ── Eventos ───────────────────────────────────────────
 document.getElementById('checkout-confirm').addEventListener('click', submitOrder);
 document.getElementById('close-checkout').addEventListener('click', closeCheckout);
 document.getElementById('whatsapp-btn').addEventListener('click', openCheckout);
