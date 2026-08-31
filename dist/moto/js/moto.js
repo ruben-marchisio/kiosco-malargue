@@ -74,7 +74,7 @@ async function loadRepartidor() {
     .select('id, nombre')
     .eq('user_id', myUserId)
     .eq('activo', true)
-    .single();
+    .maybeSingle();
 
   if (data) {
     myRepId  = data.id;
@@ -189,7 +189,7 @@ async function loadMiViaje() {
     .select('*, comercios(nombre, coords_lat, coords_lng)')
     .eq('estado', 'en_camino')
     .eq('repartidor_id', myUserId)
-    .single();
+    .maybeSingle();
 
   const container = document.getElementById('viaje-content');
 
