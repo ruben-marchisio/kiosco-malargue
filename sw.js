@@ -1,4 +1,4 @@
-const CACHE = 'kiosco-v1';
+const CACHE = 'kiosco-v2';
 const STATIC = [
   '/',
   '/index.html',
@@ -24,13 +24,20 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('supabase')) return;
+  // No cachear llamadas a Supabase ni a la API de Cloudflare Workers
+  if (e.request.url.includes('supabase') || e.request.url.includes('/api/')) return;
+
   e.respondWith(
     caches.match(e.request).then((cached) => {
-      const net = fetch(e.request).then((res) => {
-        caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
-        return res;
-      });
+      const net = fetch(e.request)
+        .then((res) => {
+          if (res && res.status === 200 && res.type === 'basic') {
+            const resToCache = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, resToCache));
+          }
+          return res;
+        })
+        .catch(() => cached);
       return cached || net;
     })
   );

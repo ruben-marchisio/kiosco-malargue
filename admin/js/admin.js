@@ -60,15 +60,25 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 
 // ── Resolución de rol ──────────────────────────
 async function resolveRole(user) {
-  // 1. Consultar tabla user_roles
-  const { data: roleRow } = await supabase
-    .from('user_roles')
-    .select('rol')
-    .eq('user_id', user.id)
-    .single();
+  let roleRow = null;
 
-  // 2. Fallback: si es el ADMIN_EMAIL y no tiene rol, tratarlo como admin
-  const rol = roleRow?.rol ?? (user.email === ADMIN_EMAIL ? 'admin' : null);
+  try {
+    // 1. Consultar tabla user_roles (maybeSingle no da error 406 si la fila no existe)
+    const { data } = await supabase
+      .from('user_roles')
+      .select('rol')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (data) roleRow = data;
+  } catch (e) {
+    console.warn('Query user_roles warning:', e);
+  }
+
+  // 2. Fallback: si el email coincide con ADMIN_EMAIL, asignarle 'admin'
+  const userEmail = (user.email || '').toLowerCase().trim();
+  const adminEmail = (ADMIN_EMAIL || '').toLowerCase().trim();
+  const rol = roleRow?.rol ?? (userEmail === adminEmail ? 'admin' : null);
 
   if (!rol) {
     // Sin rol asignado: mostrar error

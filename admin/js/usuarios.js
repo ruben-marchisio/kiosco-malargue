@@ -9,6 +9,10 @@ import { supabase } from './supabase-client.js';
 const ROL_LABEL = { admin: '👑 Admin', comercio: '🏪 Comercio', moto: '🏍️ Moto' };
 const ROL_COLOR = { admin: '#ff6b35', comercio: '#3b82f6', moto: '#10b981' };
 
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'https://kiosco-malargue.rubenmarchisio-4e3.workers.dev'
+  : '';
+
 // ── Helpers ────────────────────────────────────
 function genPassword() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -26,7 +30,7 @@ export async function loadUsuarios() {
   if (!list) return;
   list.innerHTML = '<p class="table-placeholder">Cargando usuarios...</p>';
 
-  const res = await fetch('/api/list-users', {
+  const res = await fetch(`${API_BASE}/api/list-users`, {
     headers: { Authorization: await getAuthHeader() },
   });
 
@@ -85,7 +89,7 @@ export async function loadUsuarios() {
 async function deleteUser(userId) {
   if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return;
 
-  const res = await fetch('/api/delete-user', {
+  const res = await fetch(`${API_BASE}/api/delete-user`, {
     method: 'DELETE',
     headers: {
       Authorization:  await getAuthHeader(),
@@ -150,7 +154,7 @@ export function initUsuarios() {
     submitBtn.textContent = '⏳ Creando...';
     errorEl.textContent  = '';
 
-    const res = await fetch('/api/create-user', {
+    const res = await fetch(`${API_BASE}/api/create-user`, {
       method:  'POST',
       headers: {
         Authorization:  await getAuthHeader(),
