@@ -1,11 +1,12 @@
 /* =============================================
    Kiosco Digital — Stock & Productos
-   Incluye: CRUD, buscador en tiempo real, importador CSV
+   Multi-tenant: filtra por comercio_id
    ============================================= */
 
 import { supabase, CAT_EMOJI, fmt } from './supabase-client.js';
 import { initSpellCheck, addToWhitelist } from './spell.js';
 import { clearCatalogCache } from '../../js/cache.js';
+import { miComercio } from './admin.js';
 
 // ── State ─────────────────────────────────────
 let allProducts = [];
@@ -20,16 +21,22 @@ const productForm = document.getElementById('product-form');
 const csvModal = document.getElementById('csv-modal');
 const csvFileInput = document.getElementById('csv-file-input');
 
-// ── Cargar todos los productos ────────────────
+// ── Cargar todos los productos ────────────────────────
 export async function loadStock() {
   const tbody = document.getElementById('stock-tbody');
   tbody.innerHTML = '<tr><td colspan="6" class="table-placeholder">Cargando...</td></tr>';
-  const { data } = await supabase.from('productos').select('*').order('categoria').order('nombre');
+
+  let query = supabase.from('productos').select('*').order('categoria').order('nombre');
+
+  // Filtro multi-tenant: cada comercio ve solo sus productos
+  if (miComercio) {
+    query = query.eq('comercio_id', miComercio.id);
+  }
+  // Si esSuperAdmin sin comercio, ve todos (no se agrega filtro)
+
+  const { data } = await query;
   allProducts = data || [];
-  // Registrar marcas cargadas para que el corrector no las marque como error
-  allProducts.forEach((p) => {
-    if (p.marca) addToWhitelist(p.marca);
-  });
+  allProducts.forEach((p) => { if (p.marca) addToWhitelist(p.marca); });
   renderTable(allProducts);
 }
 
@@ -376,15 +383,16 @@ export function initStock() {
     const btn = productForm.querySelector('[type="submit"]');
     btn.disabled = true;
     const payload = {
-      nombre: titleCase(document.getElementById('f-nombre').value.trim()),
-      marca: titleCase(document.getElementById('f-marca').value.trim()) || null,
-      descripcion: document.getElementById('f-descripcion').value.trim() || null,
-      categoria: document.getElementById('f-categoria').value,
-      precio: parseFloat(document.getElementById('f-precio').value),
-      imagen_url: document.getElementById('f-imagen').value.trim() || null,
-      es_tercero: document.getElementById('f-tercero').checked,
+      nombre:           titleCase(document.getElementById('f-nombre').value.trim()),
+      marca:            titleCase(document.getElementById('f-marca').value.trim()) || null,
+      descripcion:      document.getElementById('f-descripcion').value.trim() || null,
+      categoria:        document.getElementById('f-categoria').value,
+      precio:           parseFloat(document.getElementById('f-precio').value),
+      imagen_url:       document.getElementById('f-imagen').value.trim() || null,
+      es_tercero:       document.getElementById('f-tercero').checked,
       proveedor_nombre: document.getElementById('f-proveedor').value.trim() || null,
-      disponible: document.getElementById('f-disponible').checked,
+      disponible:       document.getElementById('f-disponible').checked,
+      comercio_id:      miComercio?.id || null,   // ← asignar al comercio activo
     };
     if (editingId) await supabase.from('productos').update(payload).eq('id', editingId);
     else await supabase.from('productos').insert(payload);

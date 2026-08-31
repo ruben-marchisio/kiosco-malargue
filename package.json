@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 3000",
-    "build": "rm -rf dist && mkdir -p dist && cp -r index.html css js admin icons manifest.json sw.js dist/",
+    "build": "rm -rf dist && mkdir -p dist && cp -r index.html instalar.html css js admin moto icons manifest.json sw.js dist/ && cp worker.js dist/worker.js",
     "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
     "lint": "eslint js/ admin/js/",
     "check": "prettier --check \"**/*.{js,html,css,json,md}\"",
+    "secrets": "echo 'Ejecutar:\nnpx wrangler secret put SUPABASE_URL\nnpx wrangler secret put SUPABASE_SERVICE_ROLE'",
     "deploy": "npm run build && git add -A && git commit -m '🚀 deploy' && git push"
   },
   "repository": {

@@ -1,5 +1,6 @@
 /* =============================================
    Módulo de checkout — formulario, GPS, envío WA
+   Guarda pedidos en Supabase + envía por WhatsApp
    ============================================= */
 
 import { state, saveCart } from './state.js';
@@ -9,6 +10,21 @@ import { closeCart, updateBadge } from './cart.js';
 import { isStoreClosed, showClosedModal, storeStatus } from './store-status.js';
 import { supabase } from './api.js';
 import { patchStockInCache } from './cache.js';
+
+// comercio_id del local principal (se carga una vez y se cachea)
+let _comercioId = null;
+async function getComercioPrincipalId() {
+  if (_comercioId) return _comercioId;
+  const { data } = await supabase
+    .from('comercios')
+    .select('id')
+    .eq('activo', true)
+    .order('created_at')
+    .limit(1)
+    .single();
+  _comercioId = data?.id || null;
+  return _comercioId;
+}
 
 // ── DOM refs ──────────────────────────────────
 const checkoutSheet = document.getElementById('checkout-sheet');
@@ -203,24 +219,61 @@ async function validateOrder() {
   return true;
 }
 
+// ── Guardar pedido en Supabase ──────────────────────────
+async function savePedidoToDB({ nombre, direccion, calles, pago, coords, subtotal, envio }) {
+  try {
+    const comercioId = await getComercioPrincipalId();
+    const items = state.cart.map(c => ({
+      id:       c.id,
+      nombre:   c.nombre,
+      marca:    c.marca || null,
+      qty:      c.qty,
+      precio:   c.precio,
+      subtotal: c.qty * c.precio,
+    }));
+
+    await supabase.from('pedidos').insert({
+      comercio_id:     comercioId,
+      cliente_nombre:  nombre   || null,
+      direccion:       direccion || null,
+      entre_calles:    calles   || null,
+      gps_lat:         coords?.lat || null,
+      gps_lng:         coords?.lng || null,
+      metodo_pago:     pago,
+      monto_productos: subtotal,
+      monto_envio:     envio,
+      monto_total:     subtotal + envio,
+      items,
+      estado: 'pendiente',
+    });
+  } catch (err) {
+    // No interrumpir el flujo de WhatsApp si falla el guardado
+    console.warn('[checkout] No se pudo guardar el pedido en BD:', err);
+  }
+}
+
 // ── Confirmar pedido ────────────────────────────────────
 async function submitOrder() {
   const valido = await validateOrder();
   if (!valido) return;
 
-  const nombre = nameInput.value.trim();
+  const nombre    = nameInput.value.trim();
   const direccion = addrInput.value.trim();
-  const calles = callesInput.value.trim();
-  const pago = getPayMethod() || 'efectivo';
+  const calles    = callesInput.value.trim();
+  const pago      = getPayMethod() || 'efectivo';
 
-  if (nombre) localStorage.setItem('kiosco_nombre', nombre);
+  if (nombre)    localStorage.setItem('kiosco_nombre',    nombre);
   if (direccion) localStorage.setItem('kiosco_direccion', direccion);
-  if (calles) localStorage.setItem('kiosco_calles', calles);
+  if (calles)    localStorage.setItem('kiosco_calles',    calles);
   localStorage.setItem('kiosco_pago', pago);
 
   const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
-  const envio = PRECIO_ENVIO;
+  const envio    = PRECIO_ENVIO;
 
+  // Guardar en BD (no bloquea el WA aunque falle)
+  savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });
+
+  // Abrir WhatsApp
   window.open(
     buildWhatsApp(subtotal, envio, subtotal + envio, nombre, direccion, calles, pago, gpsCoords),
     '_blank',
