@@ -1,6 +1,6 @@
 /**
  * Cloudflare Worker — Kiosco Digital Malargüe
- * Sirve los assets estáticos + expone /api/create-user
+ * Sirve los assets estáticos + expone /api/create-user, /api/list-users, /api/delete-user
  * La service_role key NUNCA llega al frontend.
  *
  * Variables de entorno requeridas (wrangler secret put):
@@ -8,8 +8,26 @@
  *   SUPABASE_SERVICE_ROLE → tu service_role key de Supabase
  */
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
 export default {
   async fetch(request, env) {
+    // ── Preflight CORS (OPTIONS) ───────────────
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS });
+    }
+
     const url = new URL(request.url);
 
     // ── API Routes ─────────────────────────────
@@ -30,26 +48,12 @@ export default {
   },
 };
 
-// ── Helpers ────────────────────────────────────
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS },
-  });
-}
-
-/** Verifica que el request venga de un usuario con rol 'admin' */
+/** Verifica que el request venga de un usuario autenticado con rol 'admin' */
 async function verifyAdmin(request, env) {
   const auth = request.headers.get('Authorization');
   if (!auth) return false;
 
-  // Verificar JWT contra Supabase
+  // 1. Verificar JWT contra Supabase Auth
   const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
     headers: {
       apikey:        env.SUPABASE_SERVICE_ROLE,
@@ -59,8 +63,14 @@ async function verifyAdmin(request, env) {
   if (!res.ok) return false;
 
   const user = await res.json();
+  if (!user?.id) return false;
 
-  // Verificar rol en user_roles
+  // 2. Si el email coincide con el admin principal de Gmail, otorgar acceso
+  if (user.email && user.email.toLowerCase().trim() === 'rubenmarchisio@gmail.com') {
+    return true;
+  }
+
+  // 3. Verificar rol en la tabla user_roles
   const roleRes = await fetch(
     `${env.SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${user.id}&rol=eq.admin&select=rol`,
     {
@@ -77,7 +87,7 @@ async function verifyAdmin(request, env) {
 // ── POST /api/create-user ──────────────────────
 async function handleCreateUser(request, env) {
   if (!(await verifyAdmin(request, env))) {
-    return json({ error: 'No autorizado' }, 403);
+    return json({ error: 'No autorizado como Administrador' }, 403);
   }
 
   let body;
@@ -86,7 +96,7 @@ async function handleCreateUser(request, env) {
 
   const { email, password, rol, nombre } = body;
   if (!email || !password || !rol) {
-    return json({ error: 'email, password y rol son obligatorios' }, 400);
+    return json({ error: 'Email, contraseña y rol son obligatorios' }, 400);
   }
   if (!['admin', 'comercio', 'moto'].includes(rol)) {
     return json({ error: 'Rol inválido' }, 400);
@@ -101,20 +111,20 @@ async function handleCreateUser(request, env) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      email,
+      email:         email.trim().toLowerCase(),
       password,
-      email_confirm: true, // no requiere confirmar email
+      email_confirm: true,
     }),
   });
 
   const createData = await createRes.json();
   if (!createRes.ok) {
-    return json({ error: createData.message || 'Error al crear usuario' }, 400);
+    return json({ error: createData.message || createData.msg || 'Error al crear usuario en Supabase Auth' }, 400);
   }
 
   const userId = createData.id;
 
-  // 2. Insertar rol
+  // 2. Insertar rol en user_roles
   await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
     method: 'POST',
     headers: {
@@ -138,9 +148,9 @@ async function handleCreateUser(request, env) {
       },
       body: JSON.stringify({
         user_id:  userId,
-        nombre:   nombre,
+        nombre:   nombre.trim(),
         rubro:    body.rubro || 'otro',
-        whatsapp: body.whatsapp || '',
+        whatsapp: body.whatsapp ? body.whatsapp.trim() : '',
         activo:   true,
       }),
     });
@@ -155,7 +165,7 @@ async function handleListUsers(request, env) {
     return json({ error: 'No autorizado' }, 403);
   }
 
-  // Listar usuarios con sus roles y comercios via la vista
+  // Consultar la vista o fallback a auth users
   const res = await fetch(
     `${env.SUPABASE_URL}/rest/v1/v_usuarios_con_rol?select=*&order=created_at.desc`,
     {
@@ -165,7 +175,29 @@ async function handleListUsers(request, env) {
       },
     }
   );
-  const data = await res.json();
+
+  let data = [];
+  if (res.ok) {
+    data = await res.json();
+  } else {
+    // Si la vista v_usuarios_con_rol aún no fue creada en SQL, traer auth users directamente
+    const usersRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, {
+      headers: {
+        apikey:        env.SUPABASE_SERVICE_ROLE,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      },
+    });
+    if (usersRes.ok) {
+      const usersData = await usersRes.json();
+      data = (usersData.users || usersData || []).map(u => ({
+        id: u.id,
+        email: u.email,
+        created_at: u.created_at,
+        rol: u.email === 'rubenmarchisio@gmail.com' ? 'admin' : 'comercio',
+      }));
+    }
+  }
+
   return json(data);
 }
 
