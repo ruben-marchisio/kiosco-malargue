@@ -33,8 +33,8 @@
     </div>
 
     <!-- ── ONBOARDING (primer ingreso de un comercio nuevo) ── -->
-    <div class="login-wrap" id="onboarding-wrap" style="display:none">
-      <div class="login-card" style="max-width:460px">
+    <div class="login-wrap" id="onboarding-wrap" style="display: none">
+      <div class="login-card" style="max-width: 460px">
         <div class="login-logo">
           <span class="icon">🏪</span>
           <h1>¡Bienvenido!</h1>
@@ -47,7 +47,17 @@
           </div>
           <div class="form-group">
             <label for="ob-rubro">Rubro</label>
-            <select id="ob-rubro" style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:inherit">
+            <select
+              id="ob-rubro"
+              style="
+                width: 100%;
+                padding: 11px 14px;
+                border: 1.5px solid #e5e7eb;
+                border-radius: 12px;
+                font-size: 14px;
+                font-family: inherit;
+              "
+            >
               <option value="kiosco">🏪 Kiosco</option>
               <option value="comidas">🍽️ Comidas / Restaurante</option>
               <option value="empanadas">🥟 Empanadas / Pizzas</option>
@@ -63,14 +73,14 @@
           </div>
           <div class="form-group">
             <label>Ubicación GPS del local</label>
-            <button type="button" id="ob-gps-btn" class="login-btn" style="background:#3b82f6;margin-top:0">
+            <button type="button" id="ob-gps-btn" class="login-btn" style="background: #3b82f6; margin-top: 0">
               📍 Marcar dónde está mi local
             </button>
-            <p id="ob-gps-hint" style="font-size:12px;color:#6b7280;margin-top:6px">
+            <p id="ob-gps-hint" style="font-size: 12px; color: #6b7280; margin-top: 6px">
               Opcional · Permite que la moto navegue directo al local
             </p>
           </div>
-          <p class="login-error" id="ob-error" style="display:block"></p>
+          <p class="login-error" id="ob-error" style="display: block"></p>
           <button type="submit" class="login-btn">Crear mi local →</button>
         </form>
       </div>
@@ -240,7 +250,6 @@
         <div class="page" id="page-pedidos" style="display: none">
           <div class="page-header"><h2>📋 Pedidos del día</h2></div>
           <div class="page-content">
-
             <!-- ── Pedidos web en tiempo real ── -->
             <div class="card" style="margin-bottom: 20px">
               <div class="card-head">
@@ -296,7 +305,6 @@
                 <p class="table-placeholder">Cargando...</p>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -404,15 +412,23 @@
                     <input type="text" id="c-wa" placeholder="5492604000000" />
                   </div>
                   <div class="field">
-                    <label>Precio de envío ($) <small style="color:var(--text-muted);font-weight:400">(solo Admin principal)</small></label>
+                    <label
+                      >Precio de envío ($)
+                      <small style="color: var(--text-muted); font-weight: 400">(solo Admin principal)</small></label
+                    >
                     <input type="number" id="c-envio" placeholder="3000" min="0" />
                   </div>
                   <div class="field">
                     <label>Ubicación GPS del local</label>
-                    <button type="button" id="c-gps-btn" class="btn btn-secondary" style="width:100%;justify-content:center">
+                    <button
+                      type="button"
+                      id="c-gps-btn"
+                      class="btn btn-secondary"
+                      style="width: 100%; justify-content: center"
+                    >
                       📍 Actualizar ubicación del local
                     </button>
-                    <p id="c-gps-hint" style="font-size:12px;color:var(--text-muted);margin-top:6px">
+                    <p id="c-gps-hint" style="font-size: 12px; color: var(--text-muted); margin-top: 6px">
                       Necesaria para que la moto navegue directo a tu local
                     </p>
                   </div>
@@ -427,11 +443,10 @@
         <div class="page" id="page-usuarios" style="display: none">
           <div class="page-header"><h2>👥 Gestión de Usuarios</h2></div>
           <div class="page-content">
-
             <!-- Crear usuario -->
-            <div class="card" style="margin-bottom:20px">
+            <div class="card" style="margin-bottom: 20px">
               <div class="card-head"><h3>➕ Crear nuevo usuario</h3></div>
-              <div style="padding:20px">
+              <div style="padding: 20px">
                 <form id="usuario-form">
                   <div class="field-row">
                     <div class="field">
@@ -449,15 +464,21 @@
                   </div>
                   <div class="field">
                     <label>Contraseña *</label>
-                    <div style="display:flex;gap:8px">
-                      <input type="password" id="u-password" placeholder="Mínimo 8 caracteres" required style="flex:1" />
+                    <div style="display: flex; gap: 8px">
+                      <input
+                        type="password"
+                        id="u-password"
+                        placeholder="Mínimo 8 caracteres"
+                        required
+                        style="flex: 1"
+                      />
                       <button type="button" id="u-gen-pass" class="btn btn-secondary">🎲 Generar</button>
                     </div>
-                    <p id="u-pass-hint" style="font-size:12px;color:var(--text-muted);margin-top:6px"></p>
+                    <p id="u-pass-hint" style="font-size: 12px; color: var(--text-muted); margin-top: 6px"></p>
                   </div>
 
                   <!-- Campos extra para comercio -->
-                  <div id="campos-comercio" style="display:block">
+                  <div id="campos-comercio" style="display: block">
                     <div class="field">
                       <label>Nombre del local</label>
                       <input type="text" id="u-nombre-comercio" placeholder="Ej: Empanadas de Erina" />
@@ -482,7 +503,7 @@
                     </div>
                   </div>
 
-                  <p class="login-error" id="u-error" style="display:block;text-align:left;margin-bottom:8px"></p>
+                  <p class="login-error" id="u-error" style="display: block; text-align: left; margin-bottom: 8px"></p>
                   <button type="submit" class="btn btn-primary">➕ Crear usuario</button>
                 </form>
               </div>
@@ -491,11 +512,10 @@
             <!-- Lista de usuarios -->
             <div class="card">
               <div class="card-head"><h3>Lista de usuarios</h3></div>
-              <div style="padding:16px" id="usuarios-list">
+              <div style="padding: 16px" id="usuarios-list">
                 <p class="table-placeholder">Cargando...</p>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -508,8 +528,12 @@
                 <div class="field-row">
                   <div class="field">
                     <label>URL de la app</label>
-                    <input type="url" id="qr-url" value="https://kiosco-malargue.rubenmarchisio-4e3.workers.dev" placeholder="https://..." />
-
+                    <input
+                      type="url"
+                      id="qr-url"
+                      value="https://kiosco-malargue.rubenmarchisio-4e3.workers.dev"
+                      placeholder="https://..."
+                    />
                   </div>
                   <div class="field">
                     <label>Tamaño del flyer</label>
@@ -527,9 +551,14 @@
                   </div>
                   <div class="field">
                     <label>Color de fondo del flyer</label>
-                    <div style="display:flex;gap:10px;align-items:center">
-                      <input type="color" id="qr-bg-color" value="#FF6B35" style="width:48px;height:36px;border:none;cursor:pointer;border-radius:6px" />
-                      <select id="qr-preset-color" style="flex:1">
+                    <div style="display: flex; gap: 10px; align-items: center">
+                      <input
+                        type="color"
+                        id="qr-bg-color"
+                        value="#FF6B35"
+                        style="width: 48px; height: 36px; border: none; cursor: pointer; border-radius: 6px"
+                      />
+                      <select id="qr-preset-color" style="flex: 1">
                         <option value="#FF6B35">🔥 Naranja El Pechito</option>
                         <option value="#1a1a2e">🌙 Azul oscuro</option>
                         <option value="#16213e">💙 Marino premium</option>
@@ -541,7 +570,7 @@
                     </div>
                   </div>
                 </div>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px">
                   <button class="btn btn-primary" id="qr-generate-btn">✨ Generar vista previa</button>
                   <button class="btn btn-secondary" id="qr-print-btn" disabled>🖨️ Imprimir / Guardar PDF</button>
                   <button class="btn btn-secondary" id="qr-cards-btn" disabled>🃏 Imprimir tarjetas</button>
@@ -550,17 +579,19 @@
             </div>
 
             <!-- Preview del flyer -->
-            <div id="qr-preview-wrap" style="display:none;margin-top:24px">
+            <div id="qr-preview-wrap" style="display: none; margin-top: 24px">
               <div class="card">
-                <div class="card-head"><h3>👁️ Vista previa del flyer</h3><span class="hint">Se imprimirá exactamente así</span></div>
-                <div style="padding:24px;display:flex;justify-content:center">
+                <div class="card-head">
+                  <h3>👁️ Vista previa del flyer</h3>
+                  <span class="hint">Se imprimirá exactamente así</span>
+                </div>
+                <div style="padding: 24px; display: flex; justify-content: center">
                   <div id="qr-flyer-container"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
       <!-- /main-content -->
     </div>

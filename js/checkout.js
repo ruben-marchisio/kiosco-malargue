@@ -223,26 +223,26 @@ async function validateOrder() {
 async function savePedidoToDB({ nombre, direccion, calles, pago, coords, subtotal, envio }) {
   try {
     const comercioId = await getComercioPrincipalId();
-    const items = state.cart.map(c => ({
-      id:       c.id,
-      nombre:   c.nombre,
-      marca:    c.marca || null,
-      qty:      c.qty,
-      precio:   c.precio,
+    const items = state.cart.map((c) => ({
+      id: c.id,
+      nombre: c.nombre,
+      marca: c.marca || null,
+      qty: c.qty,
+      precio: c.precio,
       subtotal: c.qty * c.precio,
     }));
 
     await supabase.from('pedidos').insert({
-      comercio_id:     comercioId,
-      cliente_nombre:  nombre   || null,
-      direccion:       direccion || null,
-      entre_calles:    calles   || null,
-      gps_lat:         coords?.lat || null,
-      gps_lng:         coords?.lng || null,
-      metodo_pago:     pago,
+      comercio_id: comercioId,
+      cliente_nombre: nombre || null,
+      direccion: direccion || null,
+      entre_calles: calles || null,
+      gps_lat: coords?.lat || null,
+      gps_lng: coords?.lng || null,
+      metodo_pago: pago,
       monto_productos: subtotal,
-      monto_envio:     envio,
-      monto_total:     subtotal + envio,
+      monto_envio: envio,
+      monto_total: subtotal + envio,
       items,
       estado: 'pendiente',
     });
@@ -257,18 +257,18 @@ async function submitOrder() {
   const valido = await validateOrder();
   if (!valido) return;
 
-  const nombre    = nameInput.value.trim();
+  const nombre = nameInput.value.trim();
   const direccion = addrInput.value.trim();
-  const calles    = callesInput.value.trim();
-  const pago      = getPayMethod() || 'efectivo';
+  const calles = callesInput.value.trim();
+  const pago = getPayMethod() || 'efectivo';
 
-  if (nombre)    localStorage.setItem('kiosco_nombre',    nombre);
+  if (nombre) localStorage.setItem('kiosco_nombre', nombre);
   if (direccion) localStorage.setItem('kiosco_direccion', direccion);
-  if (calles)    localStorage.setItem('kiosco_calles',    calles);
+  if (calles) localStorage.setItem('kiosco_calles', calles);
   localStorage.setItem('kiosco_pago', pago);
 
   const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
-  const envio    = PRECIO_ENVIO;
+  const envio = PRECIO_ENVIO;
 
   // Guardar en BD (no bloquea el WA aunque falle)
   savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });

@@ -56,7 +56,7 @@ async function verifyAdmin(request, env) {
   // 1. Verificar JWT contra Supabase Auth
   const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
     headers: {
-      apikey:        env.SUPABASE_SERVICE_ROLE,
+      apikey: env.SUPABASE_SERVICE_ROLE,
       Authorization: auth,
     },
   });
@@ -75,7 +75,7 @@ async function verifyAdmin(request, env) {
     `${env.SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${user.id}&rol=eq.admin&select=rol`,
     {
       headers: {
-        apikey:        env.SUPABASE_SERVICE_ROLE,
+        apikey: env.SUPABASE_SERVICE_ROLE,
         Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
       },
     }
@@ -91,8 +91,11 @@ async function handleCreateUser(request, env) {
   }
 
   let body;
-  try { body = await request.json(); }
-  catch { return json({ error: 'Body inválido' }, 400); }
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Body inválido' }, 400);
+  }
 
   const { email, password, rol, nombre } = body;
   if (!email || !password || !rol) {
@@ -106,12 +109,12 @@ async function handleCreateUser(request, env) {
   const createRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, {
     method: 'POST',
     headers: {
-      apikey:         env.SUPABASE_SERVICE_ROLE,
-      Authorization:  `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      email:         email.trim().toLowerCase(),
+      email: email.trim().toLowerCase(),
       password,
       email_confirm: true,
     }),
@@ -119,7 +122,10 @@ async function handleCreateUser(request, env) {
 
   const createData = await createRes.json();
   if (!createRes.ok) {
-    return json({ error: createData.message || createData.msg || 'Error al crear usuario en Supabase Auth' }, 400);
+    return json(
+      { error: createData.message || createData.msg || 'Error al crear usuario en Supabase Auth' },
+      400
+    );
   }
 
   const userId = createData.id;
@@ -128,10 +134,10 @@ async function handleCreateUser(request, env) {
   await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
     method: 'POST',
     headers: {
-      apikey:         env.SUPABASE_SERVICE_ROLE,
-      Authorization:  `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
       'Content-Type': 'application/json',
-      Prefer:         'return=minimal',
+      Prefer: 'return=minimal',
     },
     body: JSON.stringify({ user_id: userId, rol }),
   });
@@ -141,17 +147,17 @@ async function handleCreateUser(request, env) {
     await fetch(`${env.SUPABASE_URL}/rest/v1/comercios`, {
       method: 'POST',
       headers: {
-        apikey:         env.SUPABASE_SERVICE_ROLE,
-        Authorization:  `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+        apikey: env.SUPABASE_SERVICE_ROLE,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
         'Content-Type': 'application/json',
-        Prefer:         'return=minimal',
+        Prefer: 'return=minimal',
       },
       body: JSON.stringify({
-        user_id:  userId,
-        nombre:   nombre.trim(),
-        rubro:    body.rubro || 'otro',
+        user_id: userId,
+        nombre: nombre.trim(),
+        rubro: body.rubro || 'otro',
         whatsapp: body.whatsapp ? body.whatsapp.trim() : '',
-        activo:   true,
+        activo: true,
       }),
     });
   }
@@ -170,7 +176,7 @@ async function handleListUsers(request, env) {
     `${env.SUPABASE_URL}/rest/v1/v_usuarios_con_rol?select=*&order=created_at.desc`,
     {
       headers: {
-        apikey:        env.SUPABASE_SERVICE_ROLE,
+        apikey: env.SUPABASE_SERVICE_ROLE,
         Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
       },
     }
@@ -183,13 +189,13 @@ async function handleListUsers(request, env) {
     // Si la vista v_usuarios_con_rol aún no fue creada en SQL, traer auth users directamente
     const usersRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, {
       headers: {
-        apikey:        env.SUPABASE_SERVICE_ROLE,
+        apikey: env.SUPABASE_SERVICE_ROLE,
         Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
       },
     });
     if (usersRes.ok) {
       const usersData = await usersRes.json();
-      data = (usersData.users || usersData || []).map(u => ({
+      data = (usersData.users || usersData || []).map((u) => ({
         id: u.id,
         email: u.email,
         created_at: u.created_at,
@@ -208,8 +214,11 @@ async function handleDeleteUser(request, env) {
   }
 
   let body;
-  try { body = await request.json(); }
-  catch { return json({ error: 'Body inválido' }, 400); }
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Body inválido' }, 400);
+  }
 
   const { user_id } = body;
   if (!user_id) return json({ error: 'user_id requerido' }, 400);
@@ -217,7 +226,7 @@ async function handleDeleteUser(request, env) {
   const res = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {
     method: 'DELETE',
     headers: {
-      apikey:        env.SUPABASE_SERVICE_ROLE,
+      apikey: env.SUPABASE_SERVICE_ROLE,
       Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
     },
   });

@@ -4,6 +4,8 @@
    Un solo login → redirige según rol
    ============================================= */
 
+/* global ADMIN_EMAIL */
+
 import { supabase } from './supabase-client.js';
 import { loadDashboard } from './dashboard.js';
 import { initStock, loadStock } from './stock.js';
@@ -12,18 +14,18 @@ import { initConfig, loadConfig } from './config-admin.js';
 import { initUsuarios, loadUsuarios } from './usuarios.js';
 
 // ── Estado global ──────────────────────────────
-export let miRol      = null;   // 'admin' | 'comercio' | 'moto'
-export let miComercio = null;   // objeto de la tabla comercios (si rol=comercio)
-export let miSession  = null;   // session de supabase
+export let miRol = null; // 'admin' | 'comercio' | 'moto'
+export let miComercio = null; // objeto de la tabla comercios (si rol=comercio)
+export let miSession = null; // session de supabase
 
 // ── DOM refs ───────────────────────────────────
-const loginWrap   = document.getElementById('login-wrap');
+const loginWrap = document.getElementById('login-wrap');
 const adminLayout = document.getElementById('admin-layout');
-const loginForm   = document.getElementById('login-form');
-const loginError  = document.getElementById('login-error');
+const loginForm = document.getElementById('login-form');
+const loginError = document.getElementById('login-error');
 const loginSpinner = document.getElementById('login-spinner');
-const navItems    = document.querySelectorAll('.nav-item');
-const pages       = document.querySelectorAll('.page');
+const navItems = document.querySelectorAll('.nav-item');
+const pages = document.querySelectorAll('.page');
 
 // ── Auth ───────────────────────────────────────
 supabase.auth.onAuthStateChange(async (_e, session) => {
@@ -42,7 +44,7 @@ loginForm.addEventListener('submit', async (e) => {
   if (loginSpinner) loginSpinner.style.display = 'block';
 
   const email = document.getElementById('email').value.trim();
-  const pass  = document.getElementById('password').value;
+  const pass = document.getElementById('password').value;
   const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
 
   if (loginSpinner) loginSpinner.style.display = 'none';
@@ -54,7 +56,9 @@ loginForm.addEventListener('submit', async (e) => {
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
   adminInitialized = false;
-  miRol = null; miComercio = null; miSession = null;
+  miRol = null;
+  miComercio = null;
+  miSession = null;
   await supabase.auth.signOut();
 });
 
@@ -143,9 +147,9 @@ function updateSidebar() {
   // Badge del comercio activo
   const badgeEl = document.getElementById('sidebar-comercio');
   if (badgeEl) {
-    if (miRol === 'admin')    badgeEl.textContent = '👑 Administrador';
-    else if (miComercio)      badgeEl.textContent = `🏪 ${miComercio.nombre}`;
-    else                      badgeEl.textContent = 'Mi local';
+    if (miRol === 'admin') badgeEl.textContent = '👑 Administrador';
+    else if (miComercio) badgeEl.textContent = `🏪 ${miComercio.nombre}`;
+    else badgeEl.textContent = 'Mi local';
   }
 
   // Ocultar tab "Usuarios" si no es admin
@@ -164,10 +168,10 @@ navItems.forEach((item) => {
     item.classList.add('active');
     const target = item.dataset.page;
     pages.forEach((p) => (p.style.display = p.id === target ? 'block' : 'none'));
-    if (target === 'page-stock')      loadStock();
-    if (target === 'page-pedidos')    loadPedidos();
-    if (target === 'page-config')     loadConfig();
-    if (target === 'page-dashboard')  loadDashboard();
-    if (target === 'page-usuarios')   loadUsuarios();
+    if (target === 'page-stock') loadStock();
+    if (target === 'page-pedidos') loadPedidos();
+    if (target === 'page-config') loadConfig();
+    if (target === 'page-dashboard') loadDashboard();
+    if (target === 'page-usuarios') loadUsuarios();
   });
 });

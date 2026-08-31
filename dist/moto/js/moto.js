@@ -8,26 +8,27 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ── State ──────────────────────────────────────
-let myUserId    = null;
-let myRepId     = null;
-let myNombre    = 'Repartidor';
-let realtimeCh  = null;
+let myUserId = null;
+let myRepId = null;
+let myNombre = 'Repartidor';
+let realtimeCh = null;
 
 // ── DOM ────────────────────────────────────────
-const loginScreen  = document.getElementById('login-screen');
-const appScreen    = document.getElementById('app-screen');
-const loginForm    = document.getElementById('login-form');
-const loginError   = document.getElementById('login-error');
+const loginScreen = document.getElementById('login-screen');
+const appScreen = document.getElementById('app-screen');
+const loginForm = document.getElementById('login-form');
+const loginError = document.getElementById('login-error');
 
 // ── Format helpers ─────────────────────────────
 const fmt = (n) => Number(n).toLocaleString('es-AR');
 const timeAgo = (iso) => {
   const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
-  if (mins < 1)  return 'Ahora';
+  if (mins < 1) return 'Ahora';
   if (mins < 60) return `Hace ${mins} min`;
   return `Hace ${Math.floor(mins / 60)}h`;
 };
-const fmtHora = (iso) => new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+const fmtHora = (iso) =>
+  new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 // ── Auth ───────────────────────────────────────
 supabase.auth.onAuthStateChange((_e, session) => {
@@ -43,7 +44,7 @@ loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError.textContent = '';
   const email = document.getElementById('email').value;
-  const pass  = document.getElementById('password').value;
+  const pass = document.getElementById('password').value;
   const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
   if (error) loginError.textContent = 'Email o contraseña incorrectos';
 });
@@ -77,7 +78,7 @@ async function loadRepartidor() {
     .maybeSingle();
 
   if (data) {
-    myRepId  = data.id;
+    myRepId = data.id;
     myNombre = data.nombre;
     document.getElementById('rep-name').textContent = data.nombre;
   } else {
@@ -96,9 +97,15 @@ function subscribeRealtime() {
 
   realtimeCh = supabase
     .channel('moto-pedidos')
-    .on('postgres_changes', {
-      event: '*', schema: 'public', table: 'pedidos'
-    }, () => loadAll())
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pedidos',
+      },
+      () => loadAll()
+    )
     .subscribe();
 }
 
@@ -123,7 +130,9 @@ async function loadRadar() {
     return;
   }
 
-  list.innerHTML = data.map(p => `
+  list.innerHTML = data
+    .map(
+      (p) => `
     <div class="order-card">
       <div class="order-header">
         <div>
@@ -135,12 +144,18 @@ async function loadRadar() {
       <div class="order-row"><span class="label">📦</span><span class="val">${countItems(p.items)} producto${countItems(p.items) > 1 ? 's' : ''}</span></div>
       <div class="order-row"><span class="label">📍</span><span class="val">${p.direccion || '—'}</span></div>
       ${p.entre_calles ? `<div class="order-row"><span class="label">↔️</span><span class="val">${p.entre_calles}</span></div>` : ''}
-      ${p.comercios?.coords_lat ? `
+      ${
+        p.comercios?.coords_lat
+          ? `
         <a href="https://maps.google.com/?q=${p.comercios.coords_lat},${p.comercios.coords_lng}"
            target="_blank" rel="noopener" class="btn-action btn-local" style="display:block;text-align:center;text-decoration:none;margin-top:10px">
            📍 Ver local en mapa
-        </a>` : ''}
-    </div>`).join('');
+        </a>`
+          : ''
+      }
+    </div>`
+    )
+    .join('');
 }
 
 // ── Tab Disponibles (Listo para retirar) ──────────
@@ -160,7 +175,9 @@ async function loadDisponibles() {
     return;
   }
 
-  list.innerHTML = data.map(p => `
+  list.innerHTML = data
+    .map(
+      (p) => `
     <div class="order-card listo">
       <div class="order-header">
         <div>
@@ -177,7 +194,9 @@ async function loadDisponibles() {
       <button class="btn-action btn-tomar" onclick="aceptarViaje('${p.id}')">
         🏍️ Tomar este viaje
       </button>
-    </div>`).join('');
+    </div>`
+    )
+    .join('');
 }
 
 // ── Tab Mi Viaje activo ──────────────────────────
@@ -198,12 +217,11 @@ async function loadMiViaje() {
     return;
   }
 
-  const linkLocal   = p.comercios?.coords_lat
+  const linkLocal = p.comercios?.coords_lat
     ? `https://maps.google.com/?q=${p.comercios.coords_lat},${p.comercios.coords_lng}`
     : null;
-  const linkCliente = (p.gps_lat && p.gps_lng)
-    ? `https://maps.google.com/?q=${p.gps_lat},${p.gps_lng}`
-    : null;
+  const linkCliente =
+    p.gps_lat && p.gps_lng ? `https://maps.google.com/?q=${p.gps_lat},${p.gps_lng}` : null;
 
   container.innerHTML = `
     <div style="padding:16px">
@@ -216,12 +234,16 @@ async function loadMiViaje() {
         <div class="order-pago">${p.metodo_pago === 'transferencia' ? '💳 Ya pagó por transferencia' : '💵 Cobrar en destino'}</div>
 
         <div class="btn-row">
-          ${linkLocal
-            ? `<a href="${linkLocal}" target="_blank" rel="noopener" class="btn-action btn-local" style="flex:1;display:block;text-align:center;text-decoration:none">📍 Ir al local</a>`
-            : `<button class="btn-action btn-disabled" style="flex:1" disabled>📍 Sin coords local</button>`}
-          ${linkCliente
-            ? `<a href="${linkCliente}" target="_blank" rel="noopener" class="btn-action btn-cliente" style="flex:1;display:block;text-align:center;text-decoration:none">🏠 Ir al cliente</a>`
-            : `<button class="btn-action btn-disabled" style="flex:1" disabled>🏠 Sin GPS cliente</button>`}
+          ${
+            linkLocal
+              ? `<a href="${linkLocal}" target="_blank" rel="noopener" class="btn-action btn-local" style="flex:1;display:block;text-align:center;text-decoration:none">📍 Ir al local</a>`
+              : `<button class="btn-action btn-disabled" style="flex:1" disabled>📍 Sin coords local</button>`
+          }
+          ${
+            linkCliente
+              ? `<a href="${linkCliente}" target="_blank" rel="noopener" class="btn-action btn-cliente" style="flex:1;display:block;text-align:center;text-decoration:none">🏠 Ir al cliente</a>`
+              : `<button class="btn-action btn-disabled" style="flex:1" disabled>🏠 Sin GPS cliente</button>`
+          }
         </div>
         <button class="btn-action btn-entregado" onclick="marcarEntregado('${p.id}')">
           ✅ Marcar como entregado
@@ -246,8 +268,8 @@ async function loadHoy() {
   const total = data?.length || 0;
   const totalEnvios = data?.reduce((s, p) => s + Number(p.monto_envio), 0) || 0;
 
-  document.getElementById('hoy-viajes').textContent  = total;
-  document.getElementById('trip-count').textContent  = total;
+  document.getElementById('hoy-viajes').textContent = total;
+  document.getElementById('trip-count').textContent = total;
   document.getElementById('hoy-ingresos').textContent = `$${fmt(totalEnvios)}`;
 
   const list = document.getElementById('hoy-list');
@@ -256,7 +278,9 @@ async function loadHoy() {
     return;
   }
 
-  list.innerHTML = data.map((p, i) => `
+  list.innerHTML = data
+    .map(
+      (p, i) => `
     <div class="hoy-card">
       <div>
         <div style="font-weight:700">Viaje #${total - i}</div>
@@ -266,17 +290,22 @@ async function loadHoy() {
         <div style="font-weight:700;color:var(--green)">$${fmt(p.monto_envio)}</div>
         <div class="hoy-label">envío</div>
       </div>
-    </div>`).join('');
+    </div>`
+    )
+    .join('');
 }
 
 // ── Aceptar viaje (primer click gana) ────────────
 window.aceptarViaje = async (pedidoId) => {
   const btn = event.currentTarget || event.target;
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Tomando...'; }
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Tomando...';
+  }
 
   const { data: ok } = await supabase.rpc('aceptar_pedido', {
     p_pedido_id: pedidoId,
-    p_repartidor_user_id: myUserId
+    p_repartidor_user_id: myUserId,
   });
 
   if (ok) {
@@ -292,10 +321,7 @@ window.aceptarViaje = async (pedidoId) => {
 window.marcarEntregado = async (pedidoId) => {
   if (!confirm('¿Confirmar entrega?')) return;
 
-  await supabase
-    .from('pedidos')
-    .update({ estado: 'entregado' })
-    .eq('id', pedidoId);
+  await supabase.from('pedidos').update({ estado: 'entregado' }).eq('id', pedidoId);
 
   await loadAll();
   switchTab('hoy');
@@ -303,13 +329,15 @@ window.marcarEntregado = async (pedidoId) => {
 
 // ── Tabs ─────────────────────────────────────────
 function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`tab-btn-${name === 'mi-viaje' ? 'viaje' : name}`)?.classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+  document
+    .getElementById(`tab-btn-${name === 'mi-viaje' ? 'viaje' : name}`)
+    ?.classList.add('active');
   document.getElementById(`tab-${name}`)?.classList.add('active');
 }
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
+document.querySelectorAll('.tab-btn').forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 

@@ -7,12 +7,14 @@
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#0b0c10" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/moto/css/moto.css" />
     <script src="/js/config.js"></script>
   </head>
   <body>
-
     <!-- ── LOGIN ── -->
     <div id="login-screen">
       <div class="login-card">
@@ -38,7 +40,6 @@
 
     <!-- ── APP PRINCIPAL ── -->
     <div id="app-screen" hidden>
-
       <!-- Header -->
       <header class="moto-header">
         <div class="rep-info">
@@ -72,7 +73,6 @@
 
       <!-- Contenido -->
       <div class="tab-content">
-
         <!-- TAB: Radar (pedidos en preparación) -->
         <section class="tab-panel active" id="tab-radar">
           <div id="radar-list">
@@ -107,31 +107,30 @@
         <section class="tab-panel" id="tab-hoy">
           <div class="hoy-section">
             <p class="hoy-title">📊 Resumen de hoy</p>
-            <div style="display:flex;gap:12px;margin-bottom:16px;">
-              <div class="hoy-card" style="flex:1">
+            <div style="display: flex; gap: 12px; margin-bottom: 16px">
+              <div class="hoy-card" style="flex: 1">
                 <div>
                   <div class="hoy-num" id="hoy-viajes">0</div>
                   <div class="hoy-label">Viajes</div>
                 </div>
-                <span style="font-size:32px">🏍️</span>
+                <span style="font-size: 32px">🏍️</span>
               </div>
-              <div class="hoy-card" style="flex:1">
+              <div class="hoy-card" style="flex: 1">
                 <div>
                   <div class="hoy-num" id="hoy-ingresos">$0</div>
                   <div class="hoy-label">En envíos</div>
                 </div>
-                <span style="font-size:32px">💰</span>
+                <span style="font-size: 32px">💰</span>
               </div>
             </div>
             <p class="hoy-title">Viajes completados</p>
             <div id="hoy-list">
-              <div class="state-empty" style="padding:32px 20px">
+              <div class="state-empty" style="padding: 32px 20px">
                 <p>Aún no completaste viajes hoy</p>
               </div>
             </div>
           </div>
         </section>
-
       </div>
     </div>
 

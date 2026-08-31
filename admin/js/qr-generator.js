@@ -3,10 +3,11 @@
  * El Pechito · Kiosco Digital · Malargüe
  */
 
+/* global QRCode */
+
 /* ── Constantes del negocio ── */
 const CONTACT_NAME = 'Ruben Marchisio';
 const CONTACT_PHONE = '2604055198';
-const CONTACT_WA = '5492604055198';
 const BRAND = 'El Pechito';
 const TAGLINE = 'Tu kiosco de barrio online · Malargüe';
 const EMOJI_BRAND = '🏪';
@@ -405,7 +406,7 @@ generateBtn?.addEventListener('click', () => {
   const url = urlInput?.value?.trim() || 'https://kiosco-malargue.pages.dev';
   const sizeKey = sizeSelect?.value || 'A4';
   const preset = presetColorSelect?.value;
-  const bgColor = (preset && preset !== '') ? preset : (bgColorInput?.value || '#FF6B35');
+  const bgColor = preset && preset !== '' ? preset : bgColorInput?.value || '#FF6B35';
 
   buildFlyer(url, sizeKey, bgColor);
   previewWrap.style.display = 'block';
@@ -419,7 +420,7 @@ printBtn?.addEventListener('click', () => {
   const url = urlInput?.value?.trim() || 'https://kiosco-malargue.pages.dev';
   const sizeKey = sizeSelect?.value || 'A4';
   const preset = presetColorSelect?.value;
-  const bgColor = (preset && preset !== '') ? preset : (bgColorInput?.value || '#FF6B35');
+  const bgColor = preset && preset !== '' ? preset : bgColorInput?.value || '#FF6B35';
   const isBW = bgColor === '__bw__';
   const copies = parseInt(copiesInput?.value || '1', 10);
   const cfg = SIZES[sizeKey] || SIZES['A4'];
@@ -443,7 +444,8 @@ printBtn?.addEventListener('click', () => {
         page-break-after: ${i < copies - 1 ? 'always' : 'avoid'};
         position:relative; overflow:hidden;
       ">
-        ${flyerBody.replace('<div id="qr-code-canvas"></div>',
+        ${flyerBody.replace(
+          '<div id="qr-code-canvas"></div>',
           `<img src="${qrDataUrl}" width="${cfg.qrSize}" height="${cfg.qrSize}" style="display:block" />`
         )}
       </div>
@@ -495,7 +497,7 @@ printBtn?.addEventListener('click', () => {
     document.getElementById('print-bar').style.justifyContent='center';
     document.getElementById('print-bar').style.flexDirection='column';
     document.getElementById('print-bar').style.alignItems='center';
-  <\/script>
+  </script>
 </body>
 </html>`);
   win.document.close();
@@ -505,7 +507,7 @@ printBtn?.addEventListener('click', () => {
 cardsBtn?.addEventListener('click', () => {
   const url = urlInput?.value?.trim() || 'https://kiosco-malargue.pages.dev';
   const preset = presetColorSelect?.value;
-  const bgColor = (preset && preset !== '') ? preset : (bgColorInput?.value || '#FF6B35');
+  const bgColor = preset && preset !== '' ? preset : bgColorInput?.value || '#FF6B35';
   const isBW = bgColor === '__bw__';
 
   /* Reutilizar el QR ya generado en el preview */
@@ -520,17 +522,17 @@ cardsBtn?.addEventListener('click', () => {
 });
 
 function cardsPageHTML(url, bgColor, isBW, qrDataUrl) {
-  const darkCard   = !isBW && isDarkColor(bgColor);
-  const cardBg     = isBW
+  const darkCard = !isBW && isDarkColor(bgColor);
+  const cardBg = isBW
     ? '#ffffff'
     : 'linear-gradient(135deg, ' + bgColor + ' 0%, ' + shiftColor(bgColor, -35) + ' 100%)';
-  const textColor  = isBW ? '#000000' : (darkCard ? '#ffffff' : '#1a1a1a');
-  const muteColor  = isBW ? '#555555' : (darkCard ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.62)');
-  const qrWrapBg   = '#ffffff';
-  const qrWrapBrd  = isBW ? '2px solid #000000' : '2px solid rgba(255,255,255,0.55)';
-  const badgeBg    = isBW ? '#000000'  : (darkCard ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)');
-  const badgeTxt   = isBW ? '#ffffff'  : textColor;
-  const accentLine = isBW ? '#000000'  : (darkCard ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)');
+  const textColor = isBW ? '#000000' : darkCard ? '#ffffff' : '#1a1a1a';
+  const muteColor = isBW ? '#555555' : darkCard ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.62)';
+  const qrWrapBg = '#ffffff';
+  const qrWrapBrd = isBW ? '2px solid #000000' : '2px solid rgba(255,255,255,0.55)';
+  const badgeBg = isBW ? '#000000' : darkCard ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
+  const badgeTxt = isBW ? '#ffffff' : textColor;
+  const accentLine = isBW ? '#000000' : darkCard ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
 
   /* Una sola tarjeta */
   const card = `

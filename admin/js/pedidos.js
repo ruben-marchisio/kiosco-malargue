@@ -10,12 +10,22 @@ let realtimeCh = null;
 
 // ── Labels y colores por estado ────────────────
 const ESTADOS = {
-  pendiente:       { label: '⏳ Pendiente',          color: '#f59e0b', next: 'en_preparacion', nextLabel: '✅ Aceptar pedido' },
-  en_preparacion:  { label: '👨‍🍳 En preparación',    color: '#3b82f6', next: 'listo',           nextLabel: '✅ Listo para retirar' },
-  listo:           { label: '🟢 Listo para moto',    color: '#10b981', next: null,             nextLabel: null },
-  en_camino:       { label: '🏍️ En camino',           color: '#8b5cf6', next: null,             nextLabel: null },
-  entregado:       { label: '✅ Entregado',           color: '#6b7280', next: null,             nextLabel: null },
-  cancelado:       { label: '❌ Cancelado',           color: '#ef4444', next: null,             nextLabel: null },
+  pendiente: {
+    label: '⏳ Pendiente',
+    color: '#f59e0b',
+    next: 'en_preparacion',
+    nextLabel: '✅ Aceptar pedido',
+  },
+  en_preparacion: {
+    label: '👨‍🍳 En preparación',
+    color: '#3b82f6',
+    next: 'listo',
+    nextLabel: '✅ Listo para retirar',
+  },
+  listo: { label: '🟢 Listo para moto', color: '#10b981', next: null, nextLabel: null },
+  en_camino: { label: '🏍️ En camino', color: '#8b5cf6', next: null, nextLabel: null },
+  entregado: { label: '✅ Entregado', color: '#6b7280', next: null, nextLabel: null },
+  cancelado: { label: '❌ Cancelado', color: '#ef4444', next: null, nextLabel: null },
 };
 
 // ── Formato hora ───────────────────────────────
@@ -23,12 +33,6 @@ const fmtHora = (iso) =>
   new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 const fmtFecha = (iso) =>
   new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
-const timeAgo = (iso) => {
-  const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
-  if (mins < 1)  return 'Ahora';
-  if (mins < 60) return `Hace ${mins} min`;
-  return `Hace ${Math.floor(mins / 60)}h`;
-};
 
 // ── Cargar pedidos web ─────────────────────────
 export async function loadPedidos() {
@@ -56,28 +60,28 @@ async function loadWebPedidos() {
   }
 
   // Contador de pedidos activos (no entregados ni cancelados)
-  const activos = data.filter(p => !['entregado', 'cancelado'].includes(p.estado)).length;
+  const activos = data.filter((p) => !['entregado', 'cancelado'].includes(p.estado)).length;
   updateWebCounter(activos);
 
   list.innerHTML = data.map(renderWebPedidoCard).join('');
 
   // Listeners de botones de estado
-  list.querySelectorAll('[data-avanzar]').forEach(btn => {
+  list.querySelectorAll('[data-avanzar]').forEach((btn) => {
     btn.addEventListener('click', () => avanzarEstado(btn.dataset.avanzar, btn.dataset.next));
   });
-  list.querySelectorAll('[data-cancelar]').forEach(btn => {
+  list.querySelectorAll('[data-cancelar]').forEach((btn) => {
     btn.addEventListener('click', () => cancelarPedido(btn.dataset.cancelar));
   });
 }
 
 function renderWebPedidoCard(p) {
-  const st  = ESTADOS[p.estado] || ESTADOS.pendiente;
+  const st = ESTADOS[p.estado] || ESTADOS.pendiente;
   const items = Array.isArray(p.items)
-    ? p.items.map(i => `${i.qty}× ${i.nombre}`).join(', ')
+    ? p.items.map((i) => `${i.qty}× ${i.nombre}`).join(', ')
     : '—';
 
   const canAdvance = st.next !== null;
-  const isActive   = !['entregado', 'cancelado'].includes(p.estado);
+  const isActive = !['entregado', 'cancelado'].includes(p.estado);
 
   return `
   <div class="pedido-web-card ${p.estado}" style="border-left:4px solid ${st.color}">
@@ -98,11 +102,15 @@ function renderWebPedidoCard(p) {
       </div>
       ${p.gps_lat ? `<div class="pw-row"><span class="pw-lbl">🗺️</span><a href="https://maps.google.com/?q=${p.gps_lat},${p.gps_lng}" target="_blank" rel="noopener" style="color:var(--primary)">Ver ubicación GPS</a></div>` : ''}
     </div>
-    ${isActive ? `
+    ${
+      isActive
+        ? `
     <div class="pw-actions">
       ${canAdvance ? `<button class="btn btn-primary btn-sm" data-avanzar="${p.id}" data-next="${st.next}">${st.nextLabel}</button>` : ''}
       ${p.estado === 'pendiente' ? `<button class="btn btn-danger btn-sm" data-cancelar="${p.id}">❌ Cancelar</button>` : ''}
-    </div>` : ''}
+    </div>`
+        : ''
+    }
   </div>`;
 }
 
@@ -142,8 +150,7 @@ async function loadPedidosLog() {
 
   list.innerHTML = data
     .map((p) => {
-      const d = new Date(p.created_at);
-      const hora  = fmtHora(p.created_at);
+      const hora = fmtHora(p.created_at);
       const fecha = fmtFecha(p.created_at);
       return `
       <div class="log-item">
@@ -163,9 +170,15 @@ function subscribeRealtime() {
   if (realtimeCh) return; // Ya suscrito
   realtimeCh = supabase
     .channel('admin-pedidos-rt')
-    .on('postgres_changes', {
-      event: '*', schema: 'public', table: 'pedidos'
-    }, () => loadWebPedidos())
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pedidos',
+      },
+      () => loadWebPedidos()
+    )
     .subscribe();
 }
 
@@ -175,11 +188,11 @@ export function initPedidos() {
   const pedidoForm = document.getElementById('pedido-form');
   pedidoForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const monto_total  = parseFloat(document.getElementById('p-total').value);
-    const monto_envio  = parseFloat(document.getElementById('p-envio').value || 0);
-    const es_delivery  = document.getElementById('p-delivery').checked;
-    const es_tercero   = document.getElementById('p-comision').checked;
-    const notas        = document.getElementById('p-notas').value.trim();
+    const monto_total = parseFloat(document.getElementById('p-total').value);
+    const monto_envio = parseFloat(document.getElementById('p-envio').value || 0);
+    const es_delivery = document.getElementById('p-delivery').checked;
+    const es_tercero = document.getElementById('p-comision').checked;
+    const notas = document.getElementById('p-notas').value.trim();
     const monto_comision = es_tercero ? +(monto_total * 0.1).toFixed(2) : 0;
 
     await supabase

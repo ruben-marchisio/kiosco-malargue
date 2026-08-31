@@ -36,7 +36,9 @@ export async function loadStock() {
 
   const { data } = await query;
   allProducts = data || [];
-  allProducts.forEach((p) => { if (p.marca) addToWhitelist(p.marca); });
+  allProducts.forEach((p) => {
+    if (p.marca) addToWhitelist(p.marca);
+  });
   renderTable(allProducts);
 }
 
@@ -383,16 +385,16 @@ export function initStock() {
     const btn = productForm.querySelector('[type="submit"]');
     btn.disabled = true;
     const payload = {
-      nombre:           titleCase(document.getElementById('f-nombre').value.trim()),
-      marca:            titleCase(document.getElementById('f-marca').value.trim()) || null,
-      descripcion:      document.getElementById('f-descripcion').value.trim() || null,
-      categoria:        document.getElementById('f-categoria').value,
-      precio:           parseFloat(document.getElementById('f-precio').value),
-      imagen_url:       document.getElementById('f-imagen').value.trim() || null,
-      es_tercero:       document.getElementById('f-tercero').checked,
+      nombre: titleCase(document.getElementById('f-nombre').value.trim()),
+      marca: titleCase(document.getElementById('f-marca').value.trim()) || null,
+      descripcion: document.getElementById('f-descripcion').value.trim() || null,
+      categoria: document.getElementById('f-categoria').value,
+      precio: parseFloat(document.getElementById('f-precio').value),
+      imagen_url: document.getElementById('f-imagen').value.trim() || null,
+      es_tercero: document.getElementById('f-tercero').checked,
       proveedor_nombre: document.getElementById('f-proveedor').value.trim() || null,
-      disponible:       document.getElementById('f-disponible').checked,
-      comercio_id:      miComercio?.id || null,   // ← asignar al comercio activo
+      disponible: document.getElementById('f-disponible').checked,
+      comercio_id: miComercio?.id || null, // ← asignar al comercio activo
     };
     if (editingId) await supabase.from('productos').update(payload).eq('id', editingId);
     else await supabase.from('productos').insert(payload);
