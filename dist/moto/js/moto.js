@@ -303,16 +303,24 @@ window.aceptarViaje = async (pedidoId) => {
     btn.textContent = '⏳ Tomando...';
   }
 
-  const { data: ok } = await supabase.rpc('aceptar_pedido', {
-    p_pedido_id: pedidoId,
-    p_repartidor_user_id: myUserId,
-  });
+  // Hacemos el update directo verificando que siga en estado "listo"
+  const { data, error } = await supabase
+    .from('pedidos')
+    .update({
+      estado: 'en_camino',
+      repartidor_id: myUserId,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', pedidoId)
+    .eq('estado', 'listo')
+    .select()
+    .maybeSingle();
 
-  if (ok) {
+  if (data && !error) {
     // Cambiar al tab Mi Viaje automáticamente
     switchTab('mi-viaje');
   } else {
-    alert('⚡ Otro repartidor tomó ese viaje primero');
+    alert('⚡ Otro repartidor tomó ese viaje primero o ya no está disponible');
     await loadDisponibles();
   }
 };

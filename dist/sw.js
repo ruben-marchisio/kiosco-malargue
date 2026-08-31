@@ -1,4 +1,4 @@
-const CACHE = 'kiosco-v3';
+const CACHE = 'kiosco-v4';
 const STATIC = [
   '/',
   '/index.html',
