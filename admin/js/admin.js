@@ -12,6 +12,8 @@ import { initStock, loadStock } from './stock.js';
 import { initPedidos, loadPedidos } from './pedidos.js';
 import { initConfig, loadConfig } from './config-admin.js';
 import { initUsuarios, loadUsuarios } from './usuarios.js';
+import { initLiquidaciones, loadLiquidaciones } from './liquidaciones.js';
+import { initCuentaComercio, loadCuentaComercio } from './cuenta-comercio.js';
 
 // ── Estado global ──────────────────────────────
 export let miRol = null; // 'admin' | 'comercio' | 'moto'
@@ -137,9 +139,21 @@ function showAdmin() {
     initStock();
     initPedidos();
     initConfig();
-    if (miRol === 'admin') initUsuarios();
+    if (miRol === 'admin') {
+      initUsuarios();
+      initLiquidaciones();
+    }
+    if (miRol === 'comercio') {
+      initCuentaComercio();
+    }
   }
-  loadDashboard();
+
+  // Cargar pestaña inicial según el rol
+  if (miRol === 'comercio') {
+    document.querySelector('[data-page="page-stock"]')?.click();
+  } else {
+    document.querySelector('[data-page="page-dashboard"]')?.click();
+  }
 }
 
 // ── Sidebar adaptado al rol ────────────────────
@@ -152,13 +166,22 @@ function updateSidebar() {
     else badgeEl.textContent = 'Mi local';
   }
 
-  // Ocultar tab "Usuarios" si no es admin
-  const navUsuarios = document.querySelector('[data-page="page-usuarios"]');
-  if (navUsuarios) navUsuarios.style.display = miRol === 'admin' ? 'flex' : 'none';
+  // Mostrar/ocultar tabs según rol
+  const tabs = {
+    'page-dashboard': miRol === 'admin',
+    'page-stock': true, // Ambos
+    'page-pedidos': miRol === 'admin',
+    'page-config': true, // Ambos
+    'page-usuarios': miRol === 'admin',
+    'page-liquidacion': miRol === 'admin',
+    'page-mi-cuenta': miRol === 'comercio',
+    'page-qr': miRol === 'admin',
+  };
 
-  // Ocultar tab "Liquidación admin" si no es admin
-  const navLiq = document.querySelector('[data-page="page-liquidacion"]');
-  if (navLiq) navLiq.style.display = miRol === 'admin' ? 'flex' : 'none';
+  Object.entries(tabs).forEach(([page, visible]) => {
+    const nav = document.querySelector(`[data-page="${page}"]`);
+    if (nav) nav.style.display = visible ? 'flex' : 'none';
+  });
 }
 
 // ── Navegación ─────────────────────────────────
@@ -173,5 +196,7 @@ navItems.forEach((item) => {
     if (target === 'page-config') loadConfig();
     if (target === 'page-dashboard') loadDashboard();
     if (target === 'page-usuarios') loadUsuarios();
+    if (target === 'page-liquidacion') loadLiquidaciones();
+    if (target === 'page-mi-cuenta') loadCuentaComercio();
   });
 });

@@ -100,6 +100,12 @@
           <div class="nav-item" data-page="page-pedidos"><span class="icon">📋</span> Pedidos</div>
           <div class="nav-item" data-page="page-config"><span class="icon">⚙️</span> Configuración</div>
           <div class="nav-item" data-page="page-usuarios"><span class="icon">👥</span> Usuarios</div>
+          <div class="nav-item" data-page="page-liquidacion" id="nav-liquidacion">
+            <span class="icon">💰</span> Liquidaciones
+          </div>
+          <div class="nav-item" data-page="page-mi-cuenta" id="nav-mi-cuenta">
+            <span class="icon">💳</span> Mi Cuenta
+          </div>
           <div class="nav-item" data-page="page-qr"><span class="icon">📲</span> Código QR</div>
         </nav>
         <div class="sidebar-footer">
@@ -260,49 +266,66 @@
                 <p class="table-placeholder">Cargando...</p>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- ── Log manual de caja ── -->
+        <!-- Mi Cuenta (solo comercio) -->
+        <div class="page" id="page-mi-cuenta" style="display: none">
+          <div class="page-header"><h2>💳 Mi Cuenta</h2></div>
+          <div class="page-content">
+            <!-- Saldo pendiente -->
             <div class="card" style="margin-bottom: 20px">
-              <div class="card-head"><h3>➕ Registrar pedido de caja (manual)</h3></div>
-              <div style="padding: 20px">
-                <form id="pedido-form">
-                  <div class="field-row">
-                    <div class="field">
-                      <label>Monto total ($)</label>
-                      <input type="number" id="p-total" placeholder="0" required min="0" />
-                    </div>
-                    <div class="field">
-                      <label>Costo envío ($)</label>
-                      <input type="number" id="p-envio" placeholder="500" value="500" min="0" />
-                    </div>
-                  </div>
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="p-delivery" checked />
-                    <label for="p-delivery">Es delivery</label>
-                  </div>
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="p-comision" />
-                    <label for="p-comision">Incluye producto de vecino (cobra 10% comisión)</label>
-                  </div>
-                  <div class="field">
-                    <label>Notas (opcional)</label>
-                    <input
-                      type="text"
-                      id="p-notas"
-                      placeholder="Ej: Lomitos + empanadas vecino Ana"
-                      spellcheck="true"
-                      lang="es"
-                    />
-                  </div>
-                  <button type="submit" class="btn btn-primary">Registrar en log</button>
-                </form>
+              <div class="card-head">
+                <h3>📊 Saldo actual</h3>
+              </div>
+              <div style="padding: 20px" id="mi-cuenta-pendiente">
+                <p class="table-placeholder">Calculando...</p>
               </div>
             </div>
 
+            <!-- Historial -->
             <div class="card">
-              <div class="card-head"><h3>📋 Log manual de hoy</h3></div>
-              <div style="padding: 0 20px" id="pedidos-list">
+              <div class="card-head">
+                <h3>🗓️ Historial de pagos</h3>
+              </div>
+              <div style="padding: 0 20px 12px" id="mi-cuenta-historial">
                 <p class="table-placeholder">Cargando...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liquidaciones (solo admin) -->
+        <div class="page" id="page-liquidacion" style="display: none">
+          <div class="page-header"><h2>💰 Liquidaciones</h2></div>
+          <div class="page-content">
+            <!-- Tabs internos -->
+            <div class="liq-tabs">
+              <button class="liq-tab-btn active" data-liq-tab="motos">🏍️ Motos</button>
+              <button class="liq-tab-btn" data-liq-tab="comercios">🏪 Comercios</button>
+            </div>
+
+            <!-- Panel Motos -->
+            <div class="liq-tab-panel active" id="liq-panel-motos">
+              <div class="card" style="margin-top: 16px">
+                <div class="card-head">
+                  <h3>🏍️ Repartidores — Viajes pendientes de pago</h3>
+                </div>
+                <div style="padding: 16px" id="liq-motos-list">
+                  <p class="table-placeholder">Cargando...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel Comercios -->
+            <div class="liq-tab-panel" id="liq-panel-comercios">
+              <div class="card" style="margin-top: 16px">
+                <div class="card-head">
+                  <h3>🏪 Comercios — Saldo a cobrar</h3>
+                </div>
+                <div style="padding: 16px" id="liq-comercios-list">
+                  <p class="table-placeholder">Cargando...</p>
+                </div>
               </div>
             </div>
           </div>

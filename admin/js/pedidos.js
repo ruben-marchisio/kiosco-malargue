@@ -1,7 +1,6 @@
 /* =============================================
    Kiosco Digital — Pedidos (Admin)
-   Sección 1: Pedidos web en tiempo real (tabla pedidos)
-   Sección 2: Log manual de caja (tabla pedidos_log)
+   Pedidos web en tiempo real (tabla pedidos)
    ============================================= */
 
 import { supabase, fmt } from './supabase-client.js';
@@ -31,12 +30,10 @@ const ESTADOS = {
 // ── Formato hora ───────────────────────────────
 const fmtHora = (iso) =>
   new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-const fmtFecha = (iso) =>
-  new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
 
-// ── Cargar pedidos web ─────────────────────────
+// ── Cargar pedidos web ─────────────────────────────
 export async function loadPedidos() {
-  await Promise.all([loadWebPedidos(), loadPedidosLog()]);
+  await loadWebPedidos();
 }
 
 async function loadWebPedidos() {
@@ -72,6 +69,9 @@ async function loadWebPedidos() {
   list.querySelectorAll('[data-cancelar]').forEach((btn) => {
     btn.addEventListener('click', () => cancelarPedido(btn.dataset.cancelar));
   });
+  list.querySelectorAll('[data-borrar]').forEach((btn) => {
+    btn.addEventListener('click', () => borrarPedido(btn.dataset.borrar));
+  });
 }
 
 function renderWebPedidoCard(p) {
@@ -98,7 +98,10 @@ function renderWebPedidoCard(p) {
         <span class="pw-hora">${fmtHora(p.created_at)} · ${p.comercios?.nombre || 'Local'}</span>
         <span class="pw-status" style="background:${st.color}20;color:${st.color}">${st.label}</span>
       </div>
-      <div class="pw-total">$${fmt(p.monto_total)}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="pw-total">$${fmt(p.monto_total)}</div>
+        <button class="btn-pw-borrar" data-borrar="${p.id}" title="Borrar pedido">🗑️</button>
+      </div>
     </div>
     <div class="pw-body">
       <div class="pw-row"><span class="pw-lbl">👤</span><span>${p.cliente_nombre || '—'}</span></div>
@@ -137,48 +140,28 @@ async function cancelarPedido(pedidoId) {
   await loadWebPedidos();
 }
 
+async function borrarPedido(pedidoId) {
+  if (!confirm('¿Borrar este pedido permanentemente? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await supabase.from('pedidos').delete().eq('id', pedidoId).select();
+
+  if (error) {
+    console.error('Error al borrar pedido:', error);
+    alert(`Error: ${error.message}`);
+    return;
+  }
+
+  await loadWebPedidos();
+}
+
 function updateWebCounter(n) {
   const el = document.getElementById('web-pedidos-count');
   if (el) el.textContent = n > 0 ? n : '—';
 }
 
-// ── Log manual de caja (pedidos_log) ──────────
-async function loadPedidosLog() {
-  const list = document.getElementById('pedidos-list');
-  if (!list) return;
-  list.innerHTML = '<p class="table-placeholder">Cargando...</p>';
-
-  const { data } = await supabase
-    .from('pedidos_log')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  if (!data?.length) {
-    list.innerHTML = '<p class="table-placeholder">Aún no hay pedidos en el log manual</p>';
-    return;
-  }
-
-  list.innerHTML = data
-    .map((p) => {
-      const hora = fmtHora(p.created_at);
-      const fecha = fmtFecha(p.created_at);
-      return `
-      <div class="log-item">
-        <div class="log-icon">${p.es_delivery ? '🚴' : '🏪'}</div>
-        <div class="log-info">
-          <div class="log-time">${fecha} · ${hora}</div>
-          <div class="log-desc">${p.notas || (p.es_delivery ? 'Delivery' : 'Retiro en local')}${p.monto_comision > 0 ? ` · Comisión: $${fmt(p.monto_comision)}` : ''}</div>
-        </div>
-        <div class="log-total">$${fmt(p.monto_total)}</div>
-      </div>`;
-    })
-    .join('');
-}
-
-// ── Realtime ───────────────────────────────────
+// ── Realtime ───────────────────────────────────────────
 function subscribeRealtime() {
-  if (realtimeCh) return; // Ya suscrito
+  if (realtimeCh) return;
   realtimeCh = supabase
     .channel('admin-pedidos-rt')
     .on(
@@ -193,28 +176,7 @@ function subscribeRealtime() {
     .subscribe();
 }
 
-// ── Init ───────────────────────────────────────
+// ── Init ───────────────────────────────────────────
 export function initPedidos() {
-  // Form de registro manual (log de caja)
-  const pedidoForm = document.getElementById('pedido-form');
-  pedidoForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const monto_total = parseFloat(document.getElementById('p-total').value);
-    const monto_envio = parseFloat(document.getElementById('p-envio').value || 0);
-    const es_delivery = document.getElementById('p-delivery').checked;
-    const es_tercero = document.getElementById('p-comision').checked;
-    const notas = document.getElementById('p-notas').value.trim();
-    const monto_comision = es_tercero ? +(monto_total * 0.1).toFixed(2) : 0;
-
-    await supabase
-      .from('pedidos_log')
-      .insert({ monto_total, monto_envio, es_delivery, monto_comision, notas });
-
-    pedidoForm.reset();
-    document.getElementById('p-delivery').checked = true;
-    await loadPedidosLog();
-  });
-
-  // Suscribir a realtime cuando se activa este módulo
   subscribeRealtime();
 }
