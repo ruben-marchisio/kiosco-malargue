@@ -141,9 +141,9 @@ async function loadRadar() {
         </div>
         <span class="order-status status-en_preparacion">En preparación</span>
       </div>
-      <div class="order-row"><span class="label">📦</span><span class="val">${countItems(p.items)} producto${countItems(p.items) > 1 ? 's' : ''}</span></div>
       <div class="order-row"><span class="label">📍</span><span class="val">${p.direccion || '—'}</span></div>
       ${p.entre_calles ? `<div class="order-row"><span class="label">↔️</span><span class="val">${p.entre_calles}</span></div>` : ''}
+      ${renderItems(p.items)}
       ${
         p.comercios?.coords_lat
           ? `
@@ -189,6 +189,7 @@ async function loadDisponibles() {
       <div class="order-row"><span class="label">👤</span><span class="val">${p.cliente_nombre || '—'}</span></div>
       <div class="order-row"><span class="label">📍</span><span class="val">${p.direccion || '—'}</span></div>
       ${p.entre_calles ? `<div class="order-row"><span class="label">↔️</span><span class="val">${p.entre_calles}</span></div>` : ''}
+      ${renderItems(p.items)}
       <div class="order-amount">$${fmt(p.monto_total)}</div>
       <div class="order-pago">${p.metodo_pago === 'transferencia' ? '💳 Pagado por transferencia' : '💵 Cobrar en destino'}</div>
       <button class="btn-action btn-tomar" onclick="aceptarViaje('${p.id}')">
@@ -230,6 +231,7 @@ async function loadMiViaje() {
         <div class="viaje-cliente">👤 ${p.cliente_nombre || 'Cliente'}</div>
         <div class="order-row"><span class="label">📍</span><span class="val">${p.direccion || '—'}</span></div>
         ${p.entre_calles ? `<div class="order-row"><span class="label">↔️</span><span class="val">${p.entre_calles}</span></div>` : ''}
+        ${renderItems(p.items, true)}
         <div class="viaje-monto">$${fmt(p.monto_total)}</div>
         <div class="order-pago">${p.metodo_pago === 'transferencia' ? '💳 Ya pagó por transferencia' : '💵 Cobrar en destino'}</div>
 
@@ -309,7 +311,7 @@ window.aceptarViaje = async (pedidoId) => {
     .update({
       estado: 'en_camino',
       repartidor_id: myUserId,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', pedidoId)
     .eq('estado', 'listo')
@@ -367,4 +369,40 @@ function updateTabCount(id, count, isAlert) {
 function countItems(items) {
   if (!Array.isArray(items)) return 0;
   return items.reduce((s, i) => s + (i.qty || 1), 0);
+}
+
+/**
+ * Genera el bloque HTML con el detalle de productos del pedido.
+ * Si withCheck=true muestra checkboxes para que el repartidor controle la entrega.
+ */
+function renderItems(items, withCheck = false) {
+  if (!Array.isArray(items) || !items.length) return '';
+  const rows = items
+    .map((item, idx) => {
+      const nombre = item.nombre || item.name || '—';
+      const qty = item.qty || 1;
+      const precio =
+        item.precio != null ? ` · $${Number(item.precio).toLocaleString('es-AR')}` : '';
+      if (withCheck) {
+        return `
+          <label class="item-check-row">
+            <input type="checkbox" class="item-cb" id="cb-${idx}" onchange="this.closest('.item-check-row').classList.toggle('checked', this.checked)">
+            <span class="item-qty">${qty}×</span>
+            <span class="item-name">${nombre}</span>
+            <span class="item-price">${precio}</span>
+          </label>`;
+      }
+      return `
+        <div class="item-row">
+          <span class="item-qty">${qty}×</span>
+          <span class="item-name">${nombre}</span>
+          <span class="item-price">${precio}</span>
+        </div>`;
+    })
+    .join('');
+  return `
+    <div class="items-block">
+      <div class="items-title">🛒 Productos del pedido</div>
+      ${rows}
+    </div>`;
 }

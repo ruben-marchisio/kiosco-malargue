@@ -1225,10 +1225,29 @@ textarea {
 .pw-lbl {
   flex-shrink: 0;
 }
-.pw-items {
+.pw-row-items {
+  align-items: flex-start;
+}
+.pw-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.pw-item-row {
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.pw-item-qty {
+  font-weight: 700;
+  color: var(--primary);
+}
+.pw-item-price {
+  font-size: 11px;
   color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.5;
+  margin-left: 4px;
 }
 .pw-actions {
   display: flex;

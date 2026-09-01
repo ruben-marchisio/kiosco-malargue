@@ -76,9 +76,17 @@ async function loadWebPedidos() {
 
 function renderWebPedidoCard(p) {
   const st = ESTADOS[p.estado] || ESTADOS.pendiente;
-  const items = Array.isArray(p.items)
-    ? p.items.map((i) => `${i.qty}× ${i.nombre}`).join(', ')
-    : '—';
+
+  // Genera lista visual de items
+  const itemsHtml =
+    Array.isArray(p.items) && p.items.length
+      ? p.items
+          .map(
+            (i) =>
+              `<span class="pw-item-row"><span class="pw-item-qty">${i.qty || 1}×</span> ${i.nombre || '?'}${i.precio !== null && i.precio !== undefined ? ` <span class="pw-item-price">$${fmt(i.precio)}</span>` : ''}</span>`
+          )
+          .join('')
+      : '<span style="color:var(--muted)">—</span>';
 
   const canAdvance = st.next !== null;
   const isActive = !['entregado', 'cancelado'].includes(p.estado);
@@ -95,7 +103,10 @@ function renderWebPedidoCard(p) {
     <div class="pw-body">
       <div class="pw-row"><span class="pw-lbl">👤</span><span>${p.cliente_nombre || '—'}</span></div>
       <div class="pw-row"><span class="pw-lbl">📍</span><span>${p.direccion || '—'}${p.entre_calles ? ` · Entre: ${p.entre_calles}` : ''}</span></div>
-      <div class="pw-row"><span class="pw-lbl">🛒</span><span class="pw-items">${items}</span></div>
+      <div class="pw-row pw-row-items">
+        <span class="pw-lbl">🛒</span>
+        <div class="pw-items-list">${itemsHtml}</div>
+      </div>
       <div class="pw-row">
         <span class="pw-lbl">${p.metodo_pago === 'transferencia' ? '💳' : '💵'}</span>
         <span>${p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo'} · Envío: $${fmt(p.monto_envio)}</span>

@@ -525,6 +525,83 @@ body {
   animation: card-appear 0.3s ease;
 }
 
+/* ── Items block (detalle de productos) ─────── */
+.items-block {
+  background: rgba(255, 107, 53, 0.06);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 10px 0;
+}
+.items-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Fila simple (sin checkbox) */
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.item-row:last-child {
+  border-bottom: none;
+}
+
+/* Fila con checkbox (Mi Viaje) */
+.item-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  font-size: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.item-check-row:last-child {
+  border-bottom: none;
+}
+.item-check-row:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+.item-check-row.checked {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.item-cb {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.item-qty {
+  font-weight: 800;
+  color: var(--orange);
+  min-width: 28px;
+  flex-shrink: 0;
+}
+.item-name {
+  flex: 1;
+  color: var(--text);
+}
+.item-price {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 /* ── Scrollbar ───────────────────────────────── */
 .tab-content::-webkit-scrollbar {
   width: 4px;
