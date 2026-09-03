@@ -21,6 +21,11 @@ const btnLogout = document.getElementById('btn-logout');
 let currentUser = null;
 let realtimeSubscription = null;
 
+// ── Variables Mapa GPS ────────────────────────
+let gpsChannel = null;
+let activeMaps = {};
+let activeMarkers = {};
+
 // ── Navegación ────────────────────────────────
 export function showPerfilView() {
   closeCart();
@@ -146,10 +151,98 @@ async function loadPedidosActivos() {
         <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; color: ${color};">
           <span>${icon}</span> ${statusText}
         </div>
+        ${p.estado === 'en_camino' && p.gps_lat && p.gps_lng ? `<div id="map-${p.id}" style="height: 180px; margin-top: 16px; border-radius: 8px; z-index: 1;"></div>` : ''}
       </div>
     `;
     })
     .join('');
+
+  // Inicializar mapas después de inyectar el HTML
+  setTimeout(() => initMaps(data), 50);
+}
+
+// ── GPS Tracking Map (Leaflet) ────────────────
+function initMaps(pedidos) {
+  // Limpiar mapas anteriores si existían
+  Object.values(activeMaps).forEach((map) => map.remove());
+  activeMaps = {};
+  activeMarkers = {};
+
+  let needsGps = false;
+
+  pedidos.forEach((p) => {
+    if (p.estado === 'en_camino' && p.gps_lat && p.gps_lng) {
+      needsGps = true;
+      const mapId = `map-${p.id}`;
+      const el = document.getElementById(mapId);
+
+      if (el && window.L) {
+        const map = L.map(mapId, { zoomControl: false }).setView([p.gps_lat, p.gps_lng], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(map);
+
+        // Marcador del Cliente (Casa)
+        const casaIcon = L.divIcon({
+          html: '<span style="font-size:24px;">🏠</span>',
+          className: '',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+        L.marker([p.gps_lat, p.gps_lng], { icon: casaIcon }).addTo(map);
+
+        // Marcador de la Moto (Inicia en la casa, saltará a la moto cuando llegue el ping)
+        const motoIcon = L.divIcon({
+          html: '<span style="font-size:32px;">🛵</span>',
+          className: '',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        });
+        const motoMarker = L.marker([p.gps_lat, p.gps_lng], { icon: motoIcon }).addTo(map);
+
+        activeMaps[p.id] = map;
+        activeMarkers[p.id] = { moto: motoMarker, repartidor_id: p.repartidor_id };
+      }
+    }
+  });
+
+  if (needsGps) {
+    startListeningMotoGps();
+  }
+}
+
+async function startListeningMotoGps() {
+  if (gpsChannel) return;
+  gpsChannel = supabase.channel('motos-gps');
+
+  gpsChannel.on('presence', { event: 'sync' }, () => {
+    const state = gpsChannel.presenceState();
+    // state contiene todos los usuarios transmitiendo
+    for (let key in state) {
+      state[key].forEach((pres) => {
+        if (pres.lat && pres.lng && pres.repartidor_id) {
+          updateMotoPosition(pres.repartidor_id, pres.lat, pres.lng);
+        }
+      });
+    }
+  });
+
+  await gpsChannel.subscribe();
+}
+
+function updateMotoPosition(repartidor_id, lat, lng) {
+  Object.keys(activeMarkers).forEach((pedidoId) => {
+    if (activeMarkers[pedidoId].repartidor_id === repartidor_id) {
+      const marker = activeMarkers[pedidoId].moto;
+      const map = activeMaps[pedidoId];
+      if (marker && map) {
+        const newPos = [lat, lng];
+        marker.setLatLng(newPos);
+        // Opcional: Centrar el mapa en el punto medio entre la moto y la casa
+        // map.panTo(newPos);
+      }
+    }
+  });
 }
 
 function subscribeToOrders() {

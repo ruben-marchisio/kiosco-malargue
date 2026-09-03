@@ -14,6 +14,10 @@ let myNombre = 'Repartidor';
 let realtimeCh = null;
 let activeTrip = null;
 
+// ── Variables GPS ─────────────────────────────
+let gpsChannel = null;
+let gpsInterval = null;
+
 // ── DOM ────────────────────────────────────────
 const loginScreen = document.getElementById('login-screen');
 const appScreen = document.getElementById('app-screen');
@@ -52,6 +56,7 @@ loginForm.addEventListener('submit', async (e) => {
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
   if (realtimeCh) await supabase.removeChannel(realtimeCh);
+  stopGpsTracking();
   await supabase.auth.signOut();
 });
 
@@ -67,6 +72,7 @@ async function showApp() {
   await loadRepartidor();
   await loadAll();
   subscribeRealtime();
+  startGpsTracking(); // Iniciar transmisión de ubicación
 }
 
 // ── Cargar datos del repartidor ─────────────────
@@ -84,6 +90,53 @@ async function loadRepartidor() {
     document.getElementById('rep-name').textContent = data.nombre;
   } else {
     document.getElementById('rep-name').textContent = 'Repartidor';
+  }
+}
+
+// ── GPS Tracking (Realtime Presence) ────────────
+async function startGpsTracking() {
+  if (!myRepId) return;
+
+  if (!gpsChannel) {
+    gpsChannel = supabase.channel('motos-gps');
+    await gpsChannel.subscribe();
+  }
+
+  // Forzar primera lectura inmediata
+  sendGpsNow();
+
+  // Luego enviar ubicación cada 25 segundos
+  if (gpsInterval) clearInterval(gpsInterval);
+  gpsInterval = setInterval(sendGpsNow, 25000);
+}
+
+function sendGpsNow() {
+  if (!navigator.geolocation || !gpsChannel) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      gpsChannel
+        .track({
+          repartidor_id: myRepId,
+          nombre: myNombre,
+          lat: latitude,
+          lng: longitude,
+          updated_at: new Date().toISOString(),
+        })
+        .catch((err) => console.warn('Error al enviar track:', err));
+    },
+    (err) => console.warn('Error GPS moto:', err.message),
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function stopGpsTracking() {
+  if (gpsInterval) clearInterval(gpsInterval);
+  if (gpsChannel) {
+    gpsChannel.untrack();
+    supabase.removeChannel(gpsChannel);
+    gpsChannel = null;
   }
 }
 
