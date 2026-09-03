@@ -322,6 +322,11 @@ function showCSVPreview(text) {
 
 // ── Init: registra todos los listeners ────────
 export function initStock() {
+  // Guard: evita duplicar listeners si initStock() se llama más de una vez
+  // (ocurre cuando el usuario hace logout + login sin recargar la página)
+  if (productForm.dataset.stockInit) return;
+  productForm.dataset.stockInit = '1';
+
   // Title Case en nombre y marca
   attachTitleCase(document.getElementById('f-nombre'));
   attachTitleCase(document.getElementById('f-marca'));

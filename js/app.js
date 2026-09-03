@@ -4,16 +4,25 @@
    ============================================= */
 
 import './theme.js';
+import { state } from './state.js';
 import { addToCart, changeQty, openCart, closeCart, updateBadge } from './cart.js';
 import { closeCheckout } from './checkout.js';
 import { openSearch, closeSearch } from './search.js';
 import { loadProducts, initCategories, renderProducts } from './products.js';
 import { initHomeView, showHomeView } from './home.js';
+import { showPerfilView } from './perfil.js';
+import { showToast } from './utils.js';
 
 // ── Eventos CustomEvent (products → cart) ─────
 // products.js dispara estos eventos para evitar imports circulares
 document.addEventListener('kiosco:addToCart', (e) => addToCart(e.detail));
 document.addEventListener('kiosco:changeQty', (e) => changeQty(e.detail.id, e.detail.delta));
+
+// Cuando el usuario selecciona un comercio → recargar productos
+document.addEventListener('kiosco:storeSelected', () => loadProducts());
+
+// Toast global (usado por home.js para comercios cerrados)
+document.addEventListener('kiosco:toast', (e) => showToast(e.detail));
 
 // ── Bottom Nav ────────────────────────────────
 const overlay = document.getElementById('overlay');
@@ -21,15 +30,21 @@ const overlay = document.getElementById('overlay');
 document.getElementById('nav-home').addEventListener('click', () => {
   closeCart();
   closeSearch();
+  document.getElementById('perfil-view').style.display = 'none';
   showHomeView();
 });
 document.getElementById('nav-search').addEventListener('click', () => {
   closeCart();
+  document.getElementById('perfil-view').style.display = 'none';
   openSearch();
 });
 document.getElementById('nav-cart').addEventListener('click', () => {
   closeSearch();
+  document.getElementById('perfil-view').style.display = 'none';
   openCart();
+});
+document.getElementById('nav-perfil')?.addEventListener('click', () => {
+  showPerfilView();
 });
 
 // ── Otros triggers ────────────────────────────
@@ -39,6 +54,7 @@ document.getElementById('close-cart').addEventListener('click', closeCart);
 document.getElementById('back-to-home').addEventListener('click', () => {
   closeCart();
   closeSearch();
+  document.getElementById('perfil-view').style.display = 'none';
   showHomeView();
 });
 overlay.addEventListener('click', () => {
@@ -48,8 +64,6 @@ overlay.addEventListener('click', () => {
 });
 
 // ── Install Prompt (PWA) ──────────────────────
-import { state } from './state.js';
-import { showToast } from './utils.js';
 
 const installBanner = document.getElementById('install-banner');
 

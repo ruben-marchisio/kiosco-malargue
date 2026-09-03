@@ -55,66 +55,95 @@ toggleInput.addEventListener('change', async () => {
   const abierto = toggleInput.checked;
   updatePanelUI(abierto);
 
-  // Guardar en config_negocio (local principal Ruben) o en comercios (terceros)
   if (miComercio) {
+    // COMERCIO: solo actualiza SU propia fila en la tabla comercios.
+    // NUNCA toca config_negocio — eso es exclusivo del admin principal.
     await supabase
       .from('comercios')
       .update({
-        // Los campos de estado del local van en config_negocio para El Pechito
-        // Para otros comercios podés agregar columna 'abierto' a la tabla comercios
+        abierto,
+        motivo_cierre: abierto ? null : motivoActivo,
+        mensaje_cierre: abierto ? null : mensajeInput.value.trim() || null,
+        hora_reapertura: abierto ? null : horaInput.value || null,
       })
       .eq('id', miComercio.id);
+  } else {
+    // ADMIN PRINCIPAL: actualiza config_negocio (afecta al badge global de El Pechito)
+    await supabase
+      .from('config_negocio')
+      .update({
+        abierto,
+        motivo_cierre: abierto ? null : motivoActivo,
+        mensaje_cierre: abierto ? null : mensajeInput.value.trim() || null,
+        hora_reapertura: abierto ? null : horaInput.value || null,
+      })
+      .eq('id', 1);
   }
-
-  // config_negocio siempre se actualiza (para el catálogo público)
-  await supabase
-    .from('config_negocio')
-    .update({
-      abierto,
-      motivo_cierre: abierto ? null : motivoActivo,
-      mensaje_cierre: abierto ? null : mensajeInput.value.trim() || null,
-      hora_reapertura: abierto ? null : horaInput.value || null,
-    })
-    .eq('id', 1);
 });
 
 // ── Cargar config ──────────────────────────────
 export async function loadConfig() {
-  // 1. Estado del local (de config_negocio — para el catálogo público)
-  const { data: cfg } = await supabase.from('config_negocio').select('*').eq('id', 1).single();
+  if (miComercio) {
+    // COMERCIO: leer su estado directamente de la tabla comercios.
+    // NO leer config_negocio — ese es el estado de El Pechito.
+    const { data: com } = await supabase
+      .from('comercios')
+      .select('*')
+      .eq('id', miComercio.id)
+      .single();
 
-  if (cfg) {
-    const abierto = cfg.abierto ?? true;
+    const fuente = com || miComercio; // fallback al objeto cargado en login
+    const abierto = fuente.abierto ?? true;
     toggleInput.checked = abierto;
     updatePanelUI(abierto);
+
     if (!abierto) {
-      motivoActivo = cfg.motivo_cierre || 'horario';
+      motivoActivo = fuente.motivo_cierre || 'horario';
       templateBtns.forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.motivo === motivoActivo);
       });
-      mensajeInput.value = cfg.mensaje_cierre || '';
-      horaInput.value = cfg.hora_reapertura || '';
+      mensajeInput.value = fuente.mensaje_cierre || '';
+      horaInput.value = fuente.hora_reapertura || '';
+    } else {
+      // Reset motivo si está abierto
+      templateBtns.forEach((btn) => btn.classList.remove('active'));
+      mensajeInput.value = '';
+      horaInput.value = '';
     }
-  }
 
-  // 2. Datos del comercio activo (nombre, WhatsApp, GPS)
-  const fuente = miComercio; // null si es superadmin sin comercio
-  if (fuente) {
     document.getElementById('c-nombre').value = fuente.nombre || '';
     document.getElementById('c-wa').value = fuente.whatsapp || '';
     document.getElementById('c-rubro').value = fuente.rubro || 'kiosco';
 
-    // GPS coords
     if (fuente.coords_lat && fuente.coords_lng) {
       const hint = document.getElementById('c-gps-hint');
       if (hint)
         hint.textContent = `📍 ${fuente.coords_lat.toFixed(5)}, ${fuente.coords_lng.toFixed(5)}`;
     }
-  } else if (cfg) {
-    // Superadmin: cargar de config_negocio
-    document.getElementById('c-nombre').value = cfg.nombre_negocio || '';
-    document.getElementById('c-wa').value = cfg.whatsapp_numero || '';
-    document.getElementById('c-envio').value = cfg.precio_envio || 3000;
+  } else {
+    // ADMIN PRINCIPAL: leer de config_negocio
+    const { data: cfg } = await supabase.from('config_negocio').select('*').eq('id', 1).single();
+
+    if (cfg) {
+      const abierto = cfg.abierto ?? true;
+      toggleInput.checked = abierto;
+      updatePanelUI(abierto);
+      if (!abierto) {
+        motivoActivo = cfg.motivo_cierre || 'horario';
+        templateBtns.forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.motivo === motivoActivo);
+        });
+        mensajeInput.value = cfg.mensaje_cierre || '';
+        horaInput.value = cfg.hora_reapertura || '';
+      }
+      document.getElementById('c-nombre').value = cfg.nombre_negocio || '';
+      document.getElementById('c-wa').value = cfg.whatsapp_numero || '';
+      document.getElementById('c-envio').value = cfg.precio_envio || 3000;
+    }
+
+    // Show DB Tools only for superadmin
+    const dbTools = document.getElementById('card-db-tools');
+    if (dbTools) dbTools.style.display = 'block';
   }
 }
 
@@ -149,6 +178,60 @@ export function initConfig() {
     });
   }
 
+  const btnCleanDb = document.getElementById('btn-clean-db');
+  if (btnCleanDb && !miComercio) {
+    btnCleanDb.addEventListener('click', async () => {
+      if (
+        !confirm(
+          '⚠️ ¿Estás seguro que querés purgar la base de datos?\\n\\nSe borrarán permanentemente los pedidos que tengan más de 30 días de antigüedad y que ya estén liquidados o cancelados.\\n\\nLas liquidaciones históricas (dinero cobrado/pagado) NO se borrarán, solo se borrará el detalle individual del pedido.'
+        )
+      ) {
+        return;
+      }
+
+      btnCleanDb.textContent = '⏳ Limpiando...';
+      btnCleanDb.disabled = true;
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const limitDate = thirtyDaysAgo.toISOString();
+
+      try {
+        // We delete in two passes due to or/and complexity in supabase js client
+        // 1. Delete old cancelled orders
+        const { count: countCancel, error: err1 } = await supabase
+          .from('pedidos')
+          .delete({ count: 'exact' })
+          .eq('estado', 'cancelado')
+          .lt('created_at', limitDate);
+
+        if (err1) throw err1;
+
+        // 2. Delete old delivered orders that are fully liquidated
+        const { count: countEnt, error: err2 } = await supabase
+          .from('pedidos')
+          .delete({ count: 'exact' })
+          .eq('estado', 'entregado')
+          .lt('created_at', limitDate)
+          .not('liquidacion_comercio_id', 'is', null)
+          .not('liquidacion_moto_id', 'is', null);
+
+        if (err2) throw err2;
+
+        const totalDeleted = (countCancel || 0) + (countEnt || 0);
+        alert(
+          `✅ Limpieza completada con éxito.\\nSe eliminaron ${totalDeleted} pedidos antiguos de la base de datos para liberar espacio.`
+        );
+      } catch (error) {
+        console.error('Error cleaning DB:', error);
+        alert('❌ Ocurrió un error al limpiar la base de datos: ' + error.message);
+      } finally {
+        btnCleanDb.textContent = '🧹 Borrar pedidos de más de 30 días';
+        btnCleanDb.disabled = false;
+      }
+    });
+  }
+
   configForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const nombre = document.getElementById('c-nombre').value.trim();
@@ -157,8 +240,16 @@ export function initConfig() {
     const abierto = toggleInput.checked;
 
     if (miComercio) {
-      // Guardar en la tabla comercios
-      const updates = { nombre, whatsapp, rubro };
+      // Guardar en la tabla comercios (incluye estado abierto/cerrado)
+      const updates = {
+        nombre,
+        whatsapp,
+        rubro,
+        abierto,
+        motivo_cierre: abierto ? null : motivoActivo,
+        mensaje_cierre: abierto ? null : mensajeInput.value.trim() || null,
+        hora_reapertura: abierto ? null : horaInput.value || null,
+      };
       if (newCoords) {
         updates.coords_lat = newCoords.lat;
         updates.coords_lng = newCoords.lng;

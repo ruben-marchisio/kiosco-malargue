@@ -94,33 +94,47 @@
       <!-- Hero simplificado -->
       <section class="hero">
         <div class="hero-inner">
-          <h1>¡Pedí desde casa! 🛍️</h1>
-          <p>Navegá el catálogo y confirmá tu pedido por WhatsApp</p>
+          <h1>¡Pedidos a domicilio! 🛏️</h1>
+          <p>Elegí tu local y recibí en tu puerta</p>
           <div class="hero-pills">
-            <span class="hero-pill">🚴 Envío a domicilio</span>
+            <span class="hero-pill">🚴 Delivery rápido</span>
             <span class="hero-pill">⚡ Sin registro</span>
             <span class="hero-pill">💬 WhatsApp directo</span>
           </div>
         </div>
       </section>
 
-      <!-- Banners (extensible via Supabase en el futuro) -->
+      <!-- Banners -->
       <div class="banners-wrap" id="banners-wrap"></div>
 
-      <!-- Grilla de categorías -->
-      <section class="home-cats-section">
+      <!-- Grilla de LOCALES -->
+      <section class="home-stores-section">
         <div class="home-cats-header">
-          <h2 class="home-cats-title">Explorá por categoría</h2>
-          <span class="home-cats-hint">Tocá para filtrar</span>
+          <h2 class="home-cats-title">🏪 Locales disponibles</h2>
+          <span class="home-cats-hint">Tocá para pedir</span>
         </div>
-        <div class="home-cats-grid" id="home-cats-grid"></div>
+        <div class="home-stores-grid" id="home-stores-grid"></div>
       </section>
     </div>
 
     <!-- ── PRODUCTS VIEW ── -->
     <div id="products-view" style="display: none">
+      <!-- Header del comercio seleccionado -->
+      <div class="store-header" id="store-header" style="display: none">
+        <div class="store-header-inner">
+          <div class="store-header-logo" id="store-header-logo"></div>
+          <div class="store-header-info">
+            <div class="store-header-name" id="store-header-name"></div>
+            <div class="store-header-meta" id="store-header-meta"></div>
+          </div>
+          <span class="store-header-status" id="store-header-status"></span>
+        </div>
+      </div>
+
       <!-- Barra de regreso al inicio -->
-      <button class="products-back-bar" id="back-to-home" aria-label="Volver al inicio"><span>←</span> Inicio</button>
+      <button class="products-back-bar" id="back-to-home" aria-label="Volver al inicio">
+        <span>←</span> Ver locales
+      </button>
 
       <!-- Search bar -->
       <div class="search-wrap">
@@ -140,6 +154,164 @@
         <h2 class="section-title" id="section-title">🛍️ Todos los productos</h2>
         <div class="products-grid" id="products-grid"></div>
       </main>
+    </div>
+
+    <!-- ── PERFIL / MIS PEDIDOS VIEW ── -->
+    <div id="perfil-view" style="display: none; padding: 20px">
+      <div class="perfil-header" style="text-align: center; margin-bottom: 30px">
+        <h2 style="font-size: 24px; margin-bottom: 8px">👤 Mi Perfil</h2>
+        <p style="color: var(--text-muted)">Gestioná tus pedidos y preferencias</p>
+      </div>
+
+      <!-- Sección sin login -->
+      <div
+        id="perfil-unauth"
+        style="
+          text-align: center;
+          background: white;
+          padding: 30px 20px;
+          border-radius: 16px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          margin-bottom: 20px;
+        "
+      >
+        <div style="font-size: 40px; margin-bottom: 16px">👋</div>
+        <h3 style="margin-bottom: 12px">¡Hola! Iniciá sesión</h3>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px">
+          Ingresá para ver el estado de tus pedidos en tiempo real, guardar tus direcciones y ganar beneficios.
+        </p>
+        <button
+          id="btn-login-google"
+          class="btn-action"
+          style="
+            background: white;
+            border: 1px solid #ddd;
+            color: #333;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            padding: 12px;
+            margin-bottom: 12px;
+          "
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            style="width: 20px"
+          />
+          Continuar con Google
+        </button>
+      </div>
+
+      <!-- Sección con login (oculta por defecto) -->
+      <div id="perfil-auth" style="display: none">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 24px;
+          "
+        >
+          <img
+            id="perfil-avatar"
+            src=""
+            alt="Avatar"
+            style="width: 50px; height: 50px; border-radius: 50%; background: #f3f4f6"
+          />
+          <div>
+            <div id="perfil-nombre" style="font-weight: 700; font-size: 16px"></div>
+            <div id="perfil-email" style="font-size: 13px; color: var(--text-muted)"></div>
+          </div>
+          <button
+            id="btn-logout"
+            style="
+              margin-left: auto;
+              background: #fee2e2;
+              color: #991b1b;
+              border: none;
+              padding: 6px 12px;
+              border-radius: 8px;
+              font-weight: 600;
+              font-size: 12px;
+            "
+          >
+            Salir
+          </button>
+        </div>
+
+        <h3 style="margin-bottom: 16px">🛵 Mis Pedidos Activos</h3>
+        <div id="pedidos-activos-list">
+          <div
+            style="
+              text-align: center;
+              padding: 30px;
+              color: var(--text-muted);
+              background: white;
+              border-radius: 16px;
+              border: 1px dashed #ddd;
+            "
+          >
+            No tenés pedidos activos ahora.
+          </div>
+        </div>
+      </div>
+
+      <!-- Soporte (siempre visible) -->
+      <div style="margin-top: 30px">
+        <h3
+          style="
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          "
+        >
+          Ayuda
+        </h3>
+        <a
+          href="https://wa.me/5492604055198?text=Hola%20Soporte%20El%20Pechito,%20necesito%20ayuda%20con..."
+          target="_blank"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          "
+        >
+          <div
+            style="
+              width: 40px;
+              height: 40px;
+              background: #fef08a;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 20px;
+            "
+          >
+            🆘
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 15px">Soporte / Reclamos</div>
+            <div style="font-size: 13px; color: var(--text-muted)">Contactar directo al administrador</div>
+          </div>
+        </a>
+      </div>
     </div>
 
     <!-- ── STORE CLOSED MODAL ── -->
@@ -229,6 +401,11 @@
         </div>
 
         <div class="checkout-field">
+          <label for="checkout-phone">📞 Número de WhatsApp *</label>
+          <input type="tel" id="checkout-phone" placeholder="Ej: 2604 123456" autocomplete="tel" enterkeyhint="next" />
+        </div>
+
+        <div class="checkout-field">
           <label for="checkout-address">🏠 Dirección</label>
           <input
             type="text"
@@ -255,7 +432,7 @@
             <span class="location-btn-icon">📍</span>
             <span id="location-btn-text">Compartir mi ubicación GPS</span>
           </button>
-          <p class="location-hint" id="location-hint">Opcional · Se enviará un link de Google Maps en el mensaje</p>
+          <p class="location-hint" id="location-hint">Obligatorio · Se enviará un link de Google Maps a la moto</p>
         </div>
 
         <!-- Método de pago -->
@@ -317,6 +494,10 @@
       <button class="nav-tab" id="nav-search" aria-label="Buscar">
         <span class="nav-tab-icon">🔍</span>
         <span>Buscar</span>
+      </button>
+      <button class="nav-tab" id="nav-perfil" aria-label="Mi Perfil">
+        <span class="nav-tab-icon">👤</span>
+        <span>Mi Perfil</span>
       </button>
       <button class="nav-tab" id="nav-cart" aria-label="Carrito">
         <span class="nav-tab-icon">

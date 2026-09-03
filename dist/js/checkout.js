@@ -10,16 +10,23 @@ import { closeCart, updateBadge } from './cart.js';
 import { isStoreClosed, showClosedModal, storeStatus } from './store-status.js';
 import { supabase } from './api.js';
 import { patchStockInCache } from './cache.js';
+import { selectedStore, loadStores } from './stores.js';
 
-// comercio_id del local principal (se carga una vez y se cachea)
+// comercio_id activo: usa el comercio seleccionado en el marketplace,
+// o como fallback busca el primero activo (para El Pechito si no hay selección)
 let _comercioId = null;
 async function getComercioPrincipalId() {
+  // Si hay comercio seleccionado en el marketplace → usarlo directamente
+  if (selectedStore?.id) return selectedStore.id;
+  // Si hay un comercio asociado al carrito
+  if (state.cartStoreId) return state.cartStoreId;
+  // Fallback: buscar el primer comercio activo (El Pechito)
   if (_comercioId) return _comercioId;
   const { data } = await supabase
     .from('comercios')
     .select('id')
     .eq('activo', true)
-    .order('created_at')
+    .order('orden', { ascending: true })
     .limit(1)
     .single();
   _comercioId = data?.id || null;
@@ -42,7 +49,7 @@ let gpsCoords = null; // { lat, lng }
 function resetLocationBtn() {
   locationBtn.className = 'location-btn';
   locationBtnText.textContent = 'Compartir mi ubicación GPS';
-  locationHint.textContent = 'Opcional · Se enviará un link de Google Maps en el mensaje';
+  locationHint.textContent = 'Obligatorio · Se enviará un link de Google Maps a la moto';
 }
 
 function getPayMethod() {
@@ -91,6 +98,8 @@ locationBtn.addEventListener('click', () => {
 // ── Sheet open / close ────────────────────────
 export function openCheckout() {
   nameInput.value = localStorage.getItem('kiosco_nombre') || '';
+  const phoneInput = document.getElementById('checkout-phone');
+  if (phoneInput) phoneInput.value = localStorage.getItem('kiosco_phone') || '';
   addrInput.value = localStorage.getItem('kiosco_direccion') || '';
   callesInput.value = localStorage.getItem('kiosco_calles') || '';
   gpsCoords = null;
@@ -132,7 +141,7 @@ export function closeCheckout() {
 }
 
 // ── Mensaje WhatsApp ──────────────────────────
-function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, pago, coords) {
+async function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, pago, coords) {
   const sep = '─────────────────────';
   const sep2 = '═════════════════════';
 
@@ -159,6 +168,8 @@ function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, pago, 
     `${sep}\n\n` +
     `👤 *Cliente:* ${nombre || '—'}\n`;
 
+  const phone = document.getElementById('checkout-phone')?.value?.trim();
+  if (phone) msg += `📞 *WhatsApp:* ${phone}\n`;
   if (direccion) msg += `🏠 *Dirección:* ${direccion}\n`;
   if (calles) msg += `↔️ *Entre calles:* ${calles}\n`;
 
@@ -168,7 +179,15 @@ function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, pago, 
 
   msg += `${pagoEmoji} *Pago:* ${pagoLabel}\n`;
 
-  return `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`;
+  // Número de WhatsApp: el del comercio seleccionado, o el asociado al carrito, o el default de config.js
+  let waNum = selectedStore?.whatsapp;
+  if (!waNum && state.cartStoreId) {
+    const stores = await loadStores();
+    const s = stores.find((x) => x.id === state.cartStoreId);
+    if (s) waNum = s.whatsapp;
+  }
+  waNum = waNum || WHATSAPP_NUM;
+  return `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
 }
 
 // ── Validación pre-pedido ────────────────────────────────────
@@ -232,9 +251,19 @@ async function savePedidoToDB({ nombre, direccion, calles, pago, coords, subtota
       subtotal: c.qty * c.precio,
     }));
 
+    const phone = document.getElementById('checkout-phone')?.value?.trim();
+
+    // Obtener usuario logueado si existe
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const clienteId = session?.user?.id || null;
+
     await supabase.from('pedidos').insert({
       comercio_id: comercioId,
+      cliente_id: clienteId,
       cliente_nombre: nombre || null,
+      cliente_telefono: phone || null,
       direccion: direccion || null,
       entre_calles: calles || null,
       gps_lat: coords?.lat || null,
@@ -257,12 +286,28 @@ async function submitOrder() {
   const valido = await validateOrder();
   if (!valido) return;
 
+  if (!gpsCoords) {
+    alert(
+      '⚠️ Es OBLIGATORIO compartir tu ubicación GPS para que la moto pueda encontrarte. Por favor, tocá el botón rojo de GPS.'
+    );
+    return;
+  }
+
   const nombre = nameInput.value.trim();
+  const phoneInput = document.getElementById('checkout-phone');
+  const phone = phoneInput ? phoneInput.value.trim() : '';
   const direccion = addrInput.value.trim();
   const calles = callesInput.value.trim();
   const pago = getPayMethod() || 'efectivo';
 
+  if (!phone) {
+    alert('⚠️ Por favor, ingresá tu número de celular/WhatsApp.');
+    if (phoneInput) phoneInput.focus();
+    return;
+  }
+
   if (nombre) localStorage.setItem('kiosco_nombre', nombre);
+  if (phone) localStorage.setItem('kiosco_phone', phone);
   if (direccion) localStorage.setItem('kiosco_direccion', direccion);
   if (calles) localStorage.setItem('kiosco_calles', calles);
   localStorage.setItem('kiosco_pago', pago);
@@ -274,11 +319,17 @@ async function submitOrder() {
   savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });
 
   // Abrir WhatsApp
-  window.open(
-    buildWhatsApp(subtotal, envio, subtotal + envio, nombre, direccion, calles, pago, gpsCoords),
-    '_blank',
-    'noopener,noreferrer'
+  const waUrl = await buildWhatsApp(
+    subtotal,
+    envio,
+    subtotal + envio,
+    nombre,
+    direccion,
+    calles,
+    pago,
+    gpsCoords
   );
+  window.open(waUrl, '_blank', 'noopener,noreferrer');
 
   // Vaciar carrito
   state.cart.splice(0);

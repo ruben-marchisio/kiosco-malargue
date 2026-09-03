@@ -58,6 +58,22 @@ function showQtyToast(nombre, qty) {
 export function addToCart(id) {
   const prod = state.allProducts.find((p) => p.id === id);
   if (!prod) return;
+
+  // Si el producto pertenece a otro comercio y el carrito ya tiene ítems
+  if (state.cart.length > 0 && state.cartStoreId && state.cartStoreId !== prod.comercio_id) {
+    const doClear = confirm(
+      `Tienes productos de otro local en tu carrito.\n\n¿Deseas vaciar el carrito para agregar este producto?`
+    );
+    if (doClear) {
+      state.cart = [];
+      state.cartStoreId = prod.comercio_id;
+    } else {
+      return; // El usuario canceló la acción
+    }
+  } else if (!state.cartStoreId || state.cart.length === 0) {
+    state.cartStoreId = prod.comercio_id;
+  }
+
   const existing = state.cart.find((c) => c.id === id);
   if (existing) {
     existing.qty++;

@@ -26,7 +26,7 @@ async function loadSaldoPendiente() {
     .select('monto_envio, monto_productos')
     .eq('comercio_id', miComercio.id)
     .eq('estado', 'entregado')
-    .is('liquidacion_id', null);
+    .is('liquidacion_comercio_id', null);
 
   if (error) {
     wrap.innerHTML = `<p class="table-placeholder">Error: ${error.message}</p>`;

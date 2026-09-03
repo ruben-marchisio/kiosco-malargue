@@ -201,6 +201,10 @@ textarea {
 .main-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  padding-bottom: 70px; /* space for mobile nav */
+  min-width: 0;
 }
 .page-header {
   padding: 24px 28px 0;
@@ -798,13 +802,64 @@ textarea {
     display: none;
   }
   .page-header {
-    padding: 16px 16px 0;
+    padding: 16px 12px 0;
   }
   .page-content {
-    padding: 14px 16px 40px;
+    padding: 14px 12px 40px;
+  }
+  .card-head {
+    padding: 14px 16px;
+  }
+  .prod-table th,
+  .prod-table td {
+    padding: 10px 14px;
+    white-space: nowrap;
   }
   .stats-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 8px 12px 16px;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  }
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--t);
+  }
+  .mobile-nav-item .icon {
+    font-size: 22px;
+  }
+  .mobile-nav-item .label {
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .mobile-nav-item.active {
+    color: var(--primary);
+  }
+}
+
+/* Hide mobile nav on desktop */
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none;
+  }
+  .main-content {
+    padding-bottom: 0;
   }
 }
 

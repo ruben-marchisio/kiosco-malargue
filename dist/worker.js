@@ -43,6 +43,14 @@ export default {
       return handleDeleteUser(request, env);
     }
 
+    if (url.pathname === '/api/change-password' && request.method === 'POST') {
+      return handleChangePassword(request, env);
+    }
+
+    if (url.pathname === '/api/toggle-ban' && request.method === 'POST') {
+      return handleToggleBan(request, env);
+    }
+
     // ── Static assets ──────────────────────────
     return env.ASSETS.fetch(request);
   },
@@ -117,6 +125,12 @@ async function handleCreateUser(request, env) {
       email: email.trim().toLowerCase(),
       password,
       email_confirm: true,
+      user_metadata: {
+        dni: body.dni || null,
+        titular_nombre: body.titular_nombre || null,
+        direccion: body.direccion || null,
+        vehiculo: body.vehiculo || null,
+      },
     }),
   });
 
@@ -158,6 +172,9 @@ async function handleCreateUser(request, env) {
         rubro: body.rubro || 'otro',
         whatsapp: body.whatsapp ? body.whatsapp.trim() : '',
         activo: true,
+        abierto: false,
+        motivo_cierre: 'otro',
+        mensaje_cierre: 'Configurando el local...',
       }),
     });
   }
@@ -171,38 +188,40 @@ async function handleListUsers(request, env) {
     return json({ error: 'No autorizado' }, 403);
   }
 
-  // Consultar la vista o fallback a auth users
-  const res = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/v_usuarios_con_rol?select=*&order=created_at.desc`,
-    {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
-      },
-    }
-  );
+  // Obtenemos los usuarios directamente de Auth para acceder a metadata y baneos
+  const usersRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, {
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+    },
+  });
 
-  let data = [];
-  if (res.ok) {
-    data = await res.json();
-  } else {
-    // Si la vista v_usuarios_con_rol aún no fue creada en SQL, traer auth users directamente
-    const usersRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
-      },
-    });
-    if (usersRes.ok) {
-      const usersData = await usersRes.json();
-      data = (usersData.users || usersData || []).map((u) => ({
-        id: u.id,
-        email: u.email,
-        created_at: u.created_at,
-        rol: u.email === 'rubenmarchisio@gmail.com' ? 'admin' : 'comercio',
-      }));
-    }
+  if (!usersRes.ok) return json({ error: 'Error al listar usuarios' }, 500);
+
+  const usersData = await usersRes.json();
+  const authUsers = usersData.users || usersData || [];
+
+  // Obtenemos los roles
+  const rolesRes = await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles?select=*`, {
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+    },
+  });
+  const roles = await rolesRes.json();
+  const roleMap = {};
+  if (Array.isArray(roles)) {
+    roles.forEach((r) => (roleMap[r.user_id] = r.rol));
   }
+
+  const data = authUsers.map((u) => ({
+    id: u.id,
+    email: u.email,
+    created_at: u.created_at,
+    rol: roleMap[u.id] || (u.email === 'rubenmarchisio@gmail.com' ? 'admin' : 'comercio'),
+    banned_until: u.banned_until,
+    meta: u.raw_user_meta_data || {},
+  }));
 
   return json(data);
 }
@@ -232,4 +251,73 @@ async function handleDeleteUser(request, env) {
   });
 
   return json({ success: res.ok });
+}
+
+// ── PUT /api/change-password ────────────────────
+async function handleChangePassword(request, env) {
+  if (!(await verifyAdmin(request, env))) return json({ error: 'No autorizado' }, 403);
+
+  const body = await request.json();
+  if (!body.user_id || !body.password) return json({ error: 'Faltan datos' }, 400);
+
+  const res = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${body.user_id}`, {
+    method: 'PUT',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ password: body.password }),
+  });
+
+  return json({ success: res.ok });
+}
+
+// ── PUT /api/toggle-ban ────────────────────────
+async function handleToggleBan(request, env) {
+  if (!(await verifyAdmin(request, env))) return json({ error: 'No autorizado' }, 403);
+
+  const body = await request.json();
+  if (!body.user_id) return json({ error: 'Faltan datos' }, 400);
+
+  const isBanned = body.ban;
+  const ban_duration = isBanned ? '876000h' : 'none'; // 100 years or none
+
+  const res = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${body.user_id}`, {
+    method: 'PUT',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ban_duration }),
+  });
+
+  if (!res.ok) return json({ error: 'Error banning user' }, 500);
+
+  // Desactivar o activar comercio
+  await fetch(`${env.SUPABASE_URL}/rest/v1/comercios?user_id=eq.${body.user_id}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ activo: !isBanned, abierto: false }), // Siempre forzamos cerrado al suspender
+  });
+
+  // Intentar desactivar moto también
+  await fetch(`${env.SUPABASE_URL}/rest/v1/repartidores?user_id=eq.${body.user_id}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ activo: !isBanned }),
+  });
+
+  return json({ success: true });
 }

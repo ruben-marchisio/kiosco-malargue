@@ -149,6 +149,17 @@
                 <div class="stat-value" id="stat-pedidos">—</div>
               </div>
             </div>
+
+            <div
+              class="card"
+              id="alert-cancelaciones-card"
+              style="display: none; border-left: 4px solid #ef4444; margin-top: 20px"
+            >
+              <div class="card-head">
+                <h3 style="color: #ef4444">⚠️ Alerta: Cancelaciones sospechosas</h3>
+              </div>
+              <div style="padding: 16px" id="alert-cancelaciones-list"></div>
+            </div>
           </div>
         </div>
 
@@ -459,6 +470,25 @@
                 </form>
               </div>
             </div>
+
+            <!-- ── Herramientas de base de datos (sólo Admin) ── -->
+            <div class="card" id="card-db-tools" style="display: none; margin-top: 20px">
+              <div class="card-head"><h3>🛠️ Mantenimiento de Base de Datos</h3></div>
+              <div style="padding: 20px">
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px">
+                  Para no consumir almacenamiento innecesario, podés eliminar los pedidos viejos que ya fueron
+                  entregados (y liquidados) o que fueron cancelados hace más de 30 días.
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  id="btn-clean-db"
+                  style="width: 100%; justify-content: center"
+                >
+                  🧹 Borrar pedidos de más de 30 días
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -500,8 +530,38 @@
                     <p id="u-pass-hint" style="font-size: 12px; color: var(--text-muted); margin-top: 6px"></p>
                   </div>
 
+                  <!-- Campos comunes (DNI, Nombre Titular, Dirección) -->
+                  <div class="field-row" style="margin-top: 16px">
+                    <div class="field">
+                      <label>Nombre del Titular / Repartidor</label>
+                      <input type="text" id="u-titular" placeholder="Ej: Juan Pérez" />
+                    </div>
+                    <div class="field">
+                      <label>DNI</label>
+                      <input type="text" id="u-dni" placeholder="Sin puntos" />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Dirección física</label>
+                    <input type="text" id="u-direccion" placeholder="Calle 123, Malargüe" />
+                  </div>
+
+                  <!-- Campos extra para Moto -->
+                  <div
+                    id="campos-moto"
+                    style="display: none; padding: 12px; background: #f3f4f6; border-radius: 8px; margin-bottom: 16px"
+                  >
+                    <div class="field" style="margin: 0">
+                      <label>Vehículo / Patente</label>
+                      <input type="text" id="u-vehiculo" placeholder="Ej: Moto Honda XR 150 - Patente A123BCD" />
+                    </div>
+                  </div>
+
                   <!-- Campos extra para comercio -->
-                  <div id="campos-comercio" style="display: block">
+                  <div
+                    id="campos-comercio"
+                    style="display: block; padding: 12px; background: #eff6ff; border-radius: 8px; margin-bottom: 16px"
+                  >
                     <div class="field">
                       <label>Nombre del local</label>
                       <input type="text" id="u-nombre-comercio" placeholder="Ej: Empanadas de Erina" />
@@ -702,6 +762,30 @@
         </form>
       </div>
     </div>
+
+    <!-- ── Mobile Navigation Bar ── -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-item active" data-page="page-dashboard">
+        <span class="icon">📊</span>
+        <span class="label">Panel</span>
+      </div>
+      <div class="mobile-nav-item" data-page="page-stock">
+        <span class="icon">📦</span>
+        <span class="label">Stock</span>
+      </div>
+      <div class="mobile-nav-item" data-page="page-pedidos">
+        <span class="icon">📋</span>
+        <span class="label">Pedidos</span>
+      </div>
+      <div class="mobile-nav-item" data-page="page-mi-cuenta" id="mobile-nav-mi-cuenta">
+        <span class="icon">💳</span>
+        <span class="label">Cuenta</span>
+      </div>
+      <div class="mobile-nav-item" data-page="page-config">
+        <span class="icon">⚙️</span>
+        <span class="label">Ajustes</span>
+      </div>
+    </nav>
 
     <!-- ── MODAL IMPORTAR CSV ── -->
     <div class="modal-overlay" id="csv-modal">

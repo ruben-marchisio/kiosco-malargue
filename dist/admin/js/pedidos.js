@@ -4,6 +4,7 @@
    ============================================= */
 
 import { supabase, fmt } from './supabase-client.js';
+import { miComercio } from './admin.js';
 
 let realtimeCh = null;
 
@@ -43,12 +44,18 @@ async function loadWebPedidos() {
   list.innerHTML = '<p class="table-placeholder">Cargando...</p>';
 
   const hoy = new Date().toISOString().split('T')[0];
-  const { data, error } = await supabase
+  let query = supabase
     .from('pedidos')
     .select('*, comercios(nombre)')
     .gte('created_at', hoy)
     .order('created_at', { ascending: false })
     .limit(50);
+
+  if (miComercio) {
+    query = query.eq('comercio_id', miComercio.id);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data?.length) {
     list.innerHTML = '<p class="table-placeholder">No hay pedidos web registrados hoy</p>';
@@ -70,7 +77,7 @@ async function loadWebPedidos() {
     btn.addEventListener('click', () => cancelarPedido(btn.dataset.cancelar));
   });
   list.querySelectorAll('[data-borrar]').forEach((btn) => {
-    btn.addEventListener('click', () => borrarPedido(btn.dataset.borrar));
+    btn.addEventListener('click', () => borrarPedido(btn.dataset.borrar, btn.dataset.estado));
   });
 }
 
@@ -100,7 +107,7 @@ function renderWebPedidoCard(p) {
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <div class="pw-total">$${fmt(p.monto_total)}</div>
-        <button class="btn-pw-borrar" data-borrar="${p.id}" title="Borrar pedido">🗑️</button>
+        <button class="btn-pw-borrar" data-borrar="${p.id}" data-estado="${p.estado}" title="Borrar pedido">🗑️</button>
       </div>
     </div>
     <div class="pw-body">
@@ -115,6 +122,7 @@ function renderWebPedidoCard(p) {
         <span>${p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo'} · Envío: $${fmt(p.monto_envio)}</span>
       </div>
       ${p.gps_lat ? `<div class="pw-row"><span class="pw-lbl">🗺️</span><a href="https://maps.google.com/?q=${p.gps_lat},${p.gps_lng}" target="_blank" rel="noopener" style="color:var(--primary)">Ver ubicación GPS</a></div>` : ''}
+      ${p.estado === 'cancelado' && p.notas ? `<div class="pw-row" style="color:#ef4444; font-weight: 500; font-size: 13px;"><span class="pw-lbl">📝</span><span>Motivo: ${p.notas}</span></div>` : ''}
     </div>
     ${
       isActive
@@ -135,13 +143,37 @@ async function avanzarEstado(pedidoId, nuevoEstado) {
 }
 
 async function cancelarPedido(pedidoId) {
-  if (!confirm('¿Cancelar este pedido? No se cobrará comisión.')) return;
-  await supabase.from('pedidos').update({ estado: 'cancelado' }).eq('id', pedidoId);
+  const motivo = window.prompt(
+    '¿Motivo de cancelación? (Este motivo quedará registrado para revisión del administrador)\\n\\nDejar en blanco para cancelar sin motivo específico.'
+  );
+  if (motivo === null) return; // User pressed Cancel
+
+  await supabase
+    .from('pedidos')
+    .update({ estado: 'cancelado', notas: motivo || 'Sin motivo especificado' })
+    .eq('id', pedidoId);
   await loadWebPedidos();
 }
 
-async function borrarPedido(pedidoId) {
-  if (!confirm('¿Borrar este pedido permanentemente? Esta acción no se puede deshacer.')) return;
+async function borrarPedido(pedidoId, estado) {
+  if (miComercio && estado !== 'cancelado') {
+    alert(
+      '🚫 Acción no permitida.\\n\\nSolo se pueden borrar pedidos CANCELADOS. Los pedidos completados deben permanecer en el sistema para el cálculo de liquidaciones con la plataforma.\\n\\nNota: Los pedidos se limpian automáticamente de esta pantalla al día siguiente.'
+    );
+    return;
+  }
+
+  if (!miComercio && estado !== 'cancelado') {
+    if (
+      !confirm(
+        '⚠️ ATENCIÓN ADMIN ⚠️\\nEstás por borrar un pedido activo o entregado. Si lo borrás, desaparecerá de las liquidaciones y no se le cobrará al comercio ni se le pagará a la moto. ¿Estás seguro?'
+      )
+    ) {
+      return;
+    }
+  } else {
+    if (!confirm('¿Borrar este pedido permanentemente? Esta acción no se puede deshacer.')) return;
+  }
 
   const { error } = await supabase.from('pedidos').delete().eq('id', pedidoId).select();
 

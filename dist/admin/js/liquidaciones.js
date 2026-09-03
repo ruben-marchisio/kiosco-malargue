@@ -23,9 +23,9 @@ async function loadResumenMotos() {
   // 1. Pedidos entregados sin liquidar (repartidor_id = auth.users.id del repartidor)
   const { data: pedidos, error } = await supabase
     .from('pedidos')
-    .select('repartidor_id, monto_envio')
+    .select('repartidor_id, monto_envio, metodo_pago')
     .eq('estado', 'entregado')
-    .is('liquidacion_id', null)
+    .is('liquidacion_moto_id', null)
     .not('repartidor_id', 'is', null);
 
   if (error) {
@@ -65,7 +65,10 @@ async function loadResumenMotos() {
       };
     }
     grupos[key].viajes++;
-    grupos[key].total += Number(p.monto_envio);
+    // Si fue en efectivo, asumimos que la moto ya se quedó con la plata del envío al cobrarle al cliente.
+    if (p.metodo_pago === 'transferencia') {
+      grupos[key].total += Number(p.monto_envio);
+    }
   });
 
   const items = Object.values(grupos);
@@ -116,9 +119,9 @@ async function loadResumenComercios() {
   // Pedidos entregados sin liquidar, con datos del comercio
   const { data, error } = await supabase
     .from('pedidos')
-    .select('comercio_id, monto_envio, monto_productos, comercios(id, nombre)')
+    .select('comercio_id, monto_envio, monto_productos, metodo_pago, comercios(id, nombre)')
     .eq('estado', 'entregado')
-    .is('liquidacion_id', null)
+    .is('liquidacion_comercio_id', null)
     .not('comercio_id', 'is', null);
 
   if (error) {
@@ -140,7 +143,13 @@ async function loadResumenComercios() {
       grupos[com.id] = { id: com.id, nombre: com.nombre, viajes: 0, envios: 0, productos: 0 };
     }
     grupos[com.id].viajes++;
-    grupos[com.id].envios += Number(p.monto_envio);
+
+    // Si pagaron por transferencia (el local recibió toda la plata), el local nos debe el costo del envío
+    // Si pagaron en efectivo, la moto se quedó con el envío, así que el local NO nos debe el envío.
+    if (p.metodo_pago === 'transferencia') {
+      grupos[com.id].envios += Number(p.monto_envio);
+    }
+
     grupos[com.id].productos += Number(p.monto_productos || 0);
   });
 
@@ -225,12 +234,11 @@ async function liquidarMoto({ userId, repId, nombre, monto, viajes }) {
     return;
   }
 
-  // 2. Marcar pedidos como liquidados (repartidor_id = auth.users.id del repartidor = userId)
   const { error: errUpd } = await supabase
     .from('pedidos')
-    .update({ liquidacion_id: liq.id })
+    .update({ liquidacion_moto_id: liq.id })
     .eq('estado', 'entregado')
-    .is('liquidacion_id', null)
+    .is('liquidacion_moto_id', null)
     .eq('repartidor_id', userId);
 
   if (errUpd) {
@@ -278,9 +286,9 @@ async function liquidarComercio({ comId, nombre, envios, productos, comision, to
   // 2. Marcar pedidos del comercio como liquidados
   await supabase
     .from('pedidos')
-    .update({ liquidacion_id: liq.id })
+    .update({ liquidacion_comercio_id: liq.id })
     .eq('estado', 'entregado')
-    .is('liquidacion_id', null)
+    .is('liquidacion_comercio_id', null)
     .eq('comercio_id', comId);
 
   await loadResumenComercios();

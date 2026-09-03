@@ -26,7 +26,7 @@ const adminLayout = document.getElementById('admin-layout');
 const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
 const loginSpinner = document.getElementById('login-spinner');
-const navItems = document.querySelectorAll('.nav-item');
+const navItems = document.querySelectorAll('.nav-item, .mobile-nav-item');
 const pages = document.querySelectorAll('.page');
 
 // ── Auth ───────────────────────────────────────
@@ -169,8 +169,8 @@ function updateSidebar() {
   // Mostrar/ocultar tabs según rol
   const tabs = {
     'page-dashboard': miRol === 'admin',
-    'page-stock': true, // Ambos
-    'page-pedidos': miRol === 'admin',
+    'page-stock': miRol === 'comercio',
+    'page-pedidos': miRol === 'comercio', // Admin ya no necesita ver pedidos individuales
     'page-config': true, // Ambos
     'page-usuarios': miRol === 'admin',
     'page-liquidacion': miRol === 'admin',
@@ -179,17 +179,21 @@ function updateSidebar() {
   };
 
   Object.entries(tabs).forEach(([page, visible]) => {
-    const nav = document.querySelector(`[data-page="${page}"]`);
-    if (nav) nav.style.display = visible ? 'flex' : 'none';
+    const navs = document.querySelectorAll(`[data-page="${page}"]`);
+    navs.forEach((nav) => {
+      nav.style.display = visible ? 'flex' : 'none';
+    });
   });
 }
 
 // ── Navegación ─────────────────────────────────
 navItems.forEach((item) => {
   item.addEventListener('click', () => {
-    navItems.forEach((n) => n.classList.remove('active'));
-    item.classList.add('active');
+    // Sincronizar active status entre nav-item y mobile-nav-item que apunten al mismo page
     const target = item.dataset.page;
+    navItems.forEach((n) => n.classList.remove('active'));
+    document.querySelectorAll(`[data-page="${target}"]`).forEach((n) => n.classList.add('active'));
+
     pages.forEach((p) => (p.style.display = p.id === target ? 'block' : 'none'));
     if (target === 'page-stock') loadStock();
     if (target === 'page-pedidos') loadPedidos();
