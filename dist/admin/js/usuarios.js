@@ -6,8 +6,15 @@
 
 import { supabase } from './supabase-client.js';
 
-const ROL_LABEL = { admin: '👑 Admin', comercio: '🏪 Comercio', moto: '🏍️ Moto' };
-const ROL_COLOR = { admin: '#ff6b35', comercio: '#3b82f6', moto: '#10b981' };
+const ROL_LABEL = {
+  admin: '👑 Admin',
+  comercio: '🏪 Comercio',
+  moto: '🏍️ Moto',
+  cliente: '👤 Cliente',
+};
+const ROL_COLOR = { admin: '#ff6b35', comercio: '#3b82f6', moto: '#10b981', cliente: '#8b5cf6' };
+
+let allUsers = [];
 
 const API_BASE =
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -42,7 +49,12 @@ export async function loadUsuarios() {
     return;
   }
 
-  const users = await res.json();
+  allUsers = await res.json();
+  renderUsuarios(allUsers);
+}
+
+function renderUsuarios(users) {
+  const list = document.getElementById('usuarios-list');
   if (!users?.length) {
     list.innerHTML = '<p class="table-placeholder">No hay usuarios registrados</p>';
     return;
@@ -67,7 +79,8 @@ export async function loadUsuarios() {
               const dniTxt = meta.dni ? `DNI: ${meta.dni}` : '';
               const dirTxt = meta.direccion ? `<br>📍 ${meta.direccion}` : '';
               const vehiculoTxt = meta.vehiculo ? `<br>🛵 ${meta.vehiculo}` : '';
-              const nombreTitular = meta.titular_nombre || u.email;
+              // Google Auth users store name in full_name
+              const nombreTitular = meta.titular_nombre || meta.full_name || u.email;
 
               return `
           <tr style="opacity: ${isBanned ? '0.6' : '1'}">
@@ -79,7 +92,7 @@ export async function loadUsuarios() {
             <td>
               <span style="background:${ROL_COLOR[u.rol] || '#ccc'}20;color:${ROL_COLOR[u.rol] || '#ccc'};
                            padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">
-                ${ROL_LABEL[u.rol] || u.rol || '—'}
+                ${ROL_LABEL[u.rol] || u.rol || '👤 Cliente'}
               </span>
               ${isBanned ? `<div style="margin-top:6px;color:#ef4444;font-size:11px;font-weight:bold;">⛔ SUSPENDIDO</div>` : ''}
             </td>
@@ -181,6 +194,21 @@ export function initUsuarios() {
   const passInput = document.getElementById('u-password');
 
   if (!form) return;
+
+  // Filtros de usuarios
+  const filterBtns = document.querySelectorAll('[id^="btn-filter-"]');
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const rol = btn.id.replace('btn-filter-', '');
+      if (rol === 'todos') {
+        renderUsuarios(allUsers);
+      } else {
+        renderUsuarios(allUsers.filter((u) => u.rol === rol));
+      }
+    });
+  });
 
   // Generar contraseña automática
   const genBtn = document.getElementById('u-gen-pass');

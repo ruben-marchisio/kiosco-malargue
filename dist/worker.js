@@ -218,7 +218,7 @@ async function handleListUsers(request, env) {
     id: u.id,
     email: u.email,
     created_at: u.created_at,
-    rol: roleMap[u.id] || (u.email === 'rubenmarchisio@gmail.com' ? 'admin' : 'comercio'),
+    rol: roleMap[u.id] || (u.email === 'rubenmarchisio@gmail.com' ? 'admin' : 'cliente'),
     banned_until: u.banned_until,
     meta: u.raw_user_meta_data || {},
   }));

@@ -223,7 +223,8 @@ function openProductModal(prod) {
   document.getElementById('f-disponible').checked = prod?.disponible ?? true;
   // Reset estado de imagen
   document.getElementById('f-imagen-file').value = '';
-  if (document.getElementById('f-imagen-camara')) document.getElementById('f-imagen-camara').value = '';
+  if (document.getElementById('f-imagen-camara'))
+    document.getElementById('f-imagen-camara').value = '';
   document.getElementById('imagen-upload-status').style.display = 'none';
   setImagePreview(prod?.imagen_url || '');
   modal.classList.add('open');
@@ -351,8 +352,28 @@ export function initStock() {
   document.getElementById('imagen-remove').addEventListener('click', () => {
     document.getElementById('f-imagen').value = '';
     document.getElementById('f-imagen-file').value = '';
-    if (document.getElementById('f-imagen-camara')) document.getElementById('f-imagen-camara').value = '';
+    if (document.getElementById('f-imagen-camara'))
+      document.getElementById('f-imagen-camara').value = '';
     setImagePreview('');
+  });
+
+  // Copiar nombre y marca para buscar en Google
+  document.getElementById('btn-copy-name')?.addEventListener('click', async () => {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const marca = document.getElementById('f-marca').value.trim();
+    const texto = [nombre, marca].filter(Boolean).join(' ');
+
+    if (texto) {
+      try {
+        await navigator.clipboard.writeText(texto);
+        const btn = document.getElementById('btn-copy-name');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '✅ Copiado!';
+        setTimeout(() => (btn.innerHTML = oldText), 2000);
+      } catch (err) {
+        console.error('Error al copiar:', err);
+      }
+    }
   });
 
   // Handler compartido para subida de imagen

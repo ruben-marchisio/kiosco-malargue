@@ -594,7 +594,29 @@
 
             <!-- Lista de usuarios -->
             <div class="card">
-              <div class="card-head"><h3>Lista de usuarios</h3></div>
+              <div
+                class="card-head"
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px"
+              >
+                <h3>Lista de usuarios</h3>
+                <div class="filter-group" style="display: flex; gap: 4px; overflow-x: auto; max-width: 100%">
+                  <button class="btn btn-sm btn-secondary active" id="btn-filter-todos" style="white-space: nowrap">
+                    Todos
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="btn-filter-admin" style="white-space: nowrap">
+                    Admin
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="btn-filter-comercio" style="white-space: nowrap">
+                    Comercios
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="btn-filter-moto" style="white-space: nowrap">
+                    Motos
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="btn-filter-cliente" style="white-space: nowrap">
+                    Clientes
+                  </button>
+                </div>
+              </div>
               <div style="padding: 16px" id="usuarios-list">
                 <p class="table-placeholder">Cargando...</p>
               </div>
@@ -729,13 +751,33 @@
               </div>
             </div>
             <div class="field">
-              <label>Imagen del producto (opcional)</label>
-              <div class="imagen-input-wrap" style="flex-wrap: wrap; gap: 8px;">
-                <input type="url" id="f-imagen" placeholder="URL (https://...)" style="flex: 1; min-width: 140px;" />
+              <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
+                Imagen del producto (opcional)
+                <button
+                  type="button"
+                  id="btn-copy-name"
+                  class="btn btn-sm btn-secondary"
+                  style="padding: 2px 8px; font-size: 0.8rem"
+                >
+                  📋 Copiar para buscar
+                </button>
+              </label>
+              <div class="imagen-input-wrap" style="flex-wrap: wrap; gap: 8px">
+                <input type="url" id="f-imagen" placeholder="URL (https://...)" style="flex: 1; min-width: 140px" />
                 <span class="imagen-sep">ó</span>
-                <label class="btn btn-secondary btn-upload" for="f-imagen-camara" style="flex: 1; text-align: center; white-space: nowrap; padding: 0.5rem">📸 Cámara</label>
+                <label
+                  class="btn btn-secondary btn-upload"
+                  for="f-imagen-camara"
+                  style="flex: 1; text-align: center; white-space: nowrap; padding: 0.5rem"
+                  >📸 Cámara</label
+                >
                 <input type="file" id="f-imagen-camara" accept="image/*" capture="environment" style="display: none" />
-                <label class="btn btn-secondary btn-upload" for="f-imagen-file" style="flex: 1; text-align: center; white-space: nowrap; padding: 0.5rem">📁 Galería</label>
+                <label
+                  class="btn btn-secondary btn-upload"
+                  for="f-imagen-file"
+                  style="flex: 1; text-align: center; white-space: nowrap; padding: 0.5rem"
+                  >📁 Galería</label
+                >
                 <input type="file" id="f-imagen-file" accept="image/*" style="display: none" />
               </div>
               <div id="imagen-preview-wrap" style="display: none">
