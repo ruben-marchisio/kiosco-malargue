@@ -259,7 +259,7 @@ async function savePedidoToDB({ nombre, direccion, calles, pago, coords, subtota
     } = await supabase.auth.getSession();
     const clienteId = session?.user?.id || null;
 
-    await supabase.from('pedidos').insert({
+    const { error: insertError } = await supabase.from('pedidos').insert({
       comercio_id: comercioId,
       cliente_id: clienteId,
       cliente_nombre: nombre || null,
@@ -275,6 +275,10 @@ async function savePedidoToDB({ nombre, direccion, calles, pago, coords, subtota
       items,
       estado: 'pendiente',
     });
+
+    if (insertError) {
+      throw insertError;
+    }
   } catch (err) {
     // No interrumpir el flujo de WhatsApp si falla el guardado
     console.warn('[checkout] No se pudo guardar el pedido en BD:', err);

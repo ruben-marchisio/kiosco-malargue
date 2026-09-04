@@ -8,14 +8,17 @@ if (supabaseUrlMatch && supabaseKeyMatch) {
   const url = `${supabaseUrlMatch[1]}/rest/v1/pedidos?select=*&order=created_at.desc&limit=5`;
   fetch(url, {
     headers: {
-      'apikey': supabaseKeyMatch[1],
-      'Authorization': `Bearer ${supabaseKeyMatch[1]}`
-    }
-  }).then(r => r.json()).then(data => {
-    console.log(JSON.stringify(data, null, 2));
-  }).catch(err => {
-    console.error("FETCH ERROR", err);
-  });
+      apikey: supabaseKeyMatch[1],
+      Authorization: `Bearer ${supabaseKeyMatch[1]}`,
+    },
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      console.log(JSON.stringify(data, null, 2));
+    })
+    .catch((err) => {
+      console.error('FETCH ERROR', err);
+    });
 } else {
-  console.log("NO MATCH", supabaseUrlMatch, supabaseKeyMatch);
+  console.log('NO MATCH', supabaseUrlMatch, supabaseKeyMatch);
 }

@@ -43,7 +43,10 @@ async function loadWebPedidos() {
 
   list.innerHTML = '<p class="table-placeholder">Cargando...</p>';
 
-  const hoy = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const hoy = now.toISOString().split('T')[0];
+
   let query = supabase
     .from('pedidos')
     .select('*, comercios(nombre)')
