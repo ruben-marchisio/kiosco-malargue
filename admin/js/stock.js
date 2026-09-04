@@ -223,6 +223,7 @@ function openProductModal(prod) {
   document.getElementById('f-disponible').checked = prod?.disponible ?? true;
   // Reset estado de imagen
   document.getElementById('f-imagen-file').value = '';
+  if (document.getElementById('f-imagen-camara')) document.getElementById('f-imagen-camara').value = '';
   document.getElementById('imagen-upload-status').style.display = 'none';
   setImagePreview(prod?.imagen_url || '');
   modal.classList.add('open');
@@ -350,11 +351,12 @@ export function initStock() {
   document.getElementById('imagen-remove').addEventListener('click', () => {
     document.getElementById('f-imagen').value = '';
     document.getElementById('f-imagen-file').value = '';
+    if (document.getElementById('f-imagen-camara')) document.getElementById('f-imagen-camara').value = '';
     setImagePreview('');
   });
 
-  // Subida de imagen desde PC
-  document.getElementById('f-imagen-file').addEventListener('change', async (e) => {
+  // Handler compartido para subida de imagen
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const statusEl = document.getElementById('imagen-upload-status');
@@ -371,7 +373,12 @@ export function initStock() {
       statusEl.textContent = `❌ Error al subir: ${err.message}`;
       statusEl.className = 'upload-status error';
     }
-  });
+  };
+
+  // Subida de imagen
+  document.getElementById('f-imagen-file').addEventListener('change', handleImageUpload);
+  const camaraInput = document.getElementById('f-imagen-camara');
+  if (camaraInput) camaraInput.addEventListener('change', handleImageUpload);
 
   // Buscador y filtro por categoría
   document

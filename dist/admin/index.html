@@ -730,10 +730,12 @@
             </div>
             <div class="field">
               <label>Imagen del producto (opcional)</label>
-              <div class="imagen-input-wrap">
-                <input type="url" id="f-imagen" placeholder="Pegar URL de imagen (https://...)" />
+              <div class="imagen-input-wrap" style="flex-wrap: wrap; gap: 8px;">
+                <input type="url" id="f-imagen" placeholder="URL (https://...)" style="flex: 1; min-width: 140px;" />
                 <span class="imagen-sep">ó</span>
-                <label class="btn btn-secondary btn-upload" for="f-imagen-file">📁 Subir desde PC</label>
+                <label class="btn btn-secondary btn-upload" for="f-imagen-camara" style="flex: 1; text-align: center; white-space: nowrap; padding: 0.5rem">📸 Cámara</label>
+                <input type="file" id="f-imagen-camara" accept="image/*" capture="environment" style="display: none" />
+                <label class="btn btn-secondary btn-upload" for="f-imagen-file" style="flex: 1; text-align: center; white-space: nowrap; padding: 0.5rem">📁 Galería</label>
                 <input type="file" id="f-imagen-file" accept="image/*" style="display: none" />
               </div>
               <div id="imagen-preview-wrap" style="display: none">
