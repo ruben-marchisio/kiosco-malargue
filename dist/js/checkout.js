@@ -315,8 +315,8 @@ async function submitOrder() {
   const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
   const envio = PRECIO_ENVIO;
 
-  // Guardar en BD (no bloquea el WA aunque falle)
-  savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });
+  // Guardar en BD (se espera a que termine para que el navegador móvil no cancele la petición al cambiar a WhatsApp)
+  await savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });
 
   // Abrir WhatsApp
   const waUrl = await buildWhatsApp(
