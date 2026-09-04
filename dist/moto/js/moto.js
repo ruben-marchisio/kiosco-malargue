@@ -94,6 +94,8 @@ async function loadRepartidor() {
 }
 
 // ── GPS Tracking (Realtime Presence) ────────────
+let watchId = null;
+
 async function startGpsTracking() {
   if (!myRepId) return;
 
@@ -102,37 +104,33 @@ async function startGpsTracking() {
     await gpsChannel.subscribe();
   }
 
-  // Forzar primera lectura inmediata
-  sendGpsNow();
-
-  // Luego enviar ubicación cada 25 segundos
-  if (gpsInterval) clearInterval(gpsInterval);
-  gpsInterval = setInterval(sendGpsNow, 25000);
-}
-
-function sendGpsNow() {
-  if (!navigator.geolocation || !gpsChannel) return;
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords;
-      gpsChannel
-        .track({
-          repartidor_id: myRepId,
-          nombre: myNombre,
-          lat: latitude,
-          lng: longitude,
-          updated_at: new Date().toISOString(),
-        })
-        .catch((err) => console.warn('Error al enviar track:', err));
-    },
-    (err) => console.warn('Error GPS moto:', err.message),
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
+  if (navigator.geolocation) {
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (gpsChannel) {
+          gpsChannel
+            .track({
+              repartidor_id: myRepId,
+              nombre: myNombre,
+              lat: latitude,
+              lng: longitude,
+              updated_at: new Date().toISOString(),
+            })
+            .catch((err) => console.warn('Error al enviar track:', err));
+        }
+      },
+      (err) => console.warn('Error GPS moto:', err.message),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+    );
+  }
 }
 
 function stopGpsTracking() {
-  if (gpsInterval) clearInterval(gpsInterval);
+  if (watchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
   if (gpsChannel) {
     gpsChannel.untrack();
     supabase.removeChannel(gpsChannel);
@@ -332,8 +330,8 @@ async function loadMiViaje() {
     `;
   } else {
     let contactoHtml = '';
-    if (p.cliente_telefono) {
-      const cleanPhone = p.cliente_telefono.replace(/\D/g, ''); // keep only numbers
+    if (p.cliente_tel) {
+      const cleanPhone = p.cliente_tel.replace(/\D/g, ''); // keep only numbers
       contactoHtml = `
         <div style="display:flex; gap:8px; margin-bottom:16px;">
           <a href="tel:${cleanPhone}" class="btn-action" style="flex:1; text-decoration:none; background:#e0f2fe; color:#0284c7; border:1.5px solid #bae6fd; text-align:center;">

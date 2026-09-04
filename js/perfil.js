@@ -168,6 +168,8 @@ function initMaps(pedidos) {
   Object.values(activeMaps).forEach((map) => map.remove());
   activeMaps = {};
   activeMarkers = {};
+  const notifiedArrival = window.notifiedArrival || {};
+  window.notifiedArrival = notifiedArrival;
 
   let needsGps = false;
 
@@ -179,7 +181,7 @@ function initMaps(pedidos) {
 
       if (el && window.L) {
         const map = L.map(mapId, { zoomControl: false }).setView([p.gps_lat, p.gps_lng], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
 
@@ -202,7 +204,11 @@ function initMaps(pedidos) {
         const motoMarker = L.marker([p.gps_lat, p.gps_lng], { icon: motoIcon }).addTo(map);
 
         activeMaps[p.id] = map;
-        activeMarkers[p.id] = { moto: motoMarker, repartidor_id: p.repartidor_id };
+        activeMarkers[p.id] = {
+          moto: motoMarker,
+          repartidor_id: p.repartidor_id,
+          casaLatLng: [p.gps_lat, p.gps_lng],
+        };
       }
     }
   });
@@ -239,8 +245,20 @@ function updateMotoPosition(repartidor_id, lat, lng) {
       if (marker && map) {
         const newPos = [lat, lng];
         marker.setLatLng(newPos);
-        // Opcional: Centrar el mapa en el punto medio entre la moto y la casa
+
+        // Centrar dinámicamente si se quiere
         // map.panTo(newPos);
+
+        // Notificar llegada (menos de 150 metros)
+        const casaPos = activeMarkers[pedidoId].casaLatLng;
+        if (casaPos) {
+          const distance = map.distance(newPos, casaPos);
+          if (distance < 150 && !window.notifiedArrival[pedidoId]) {
+            window.notifiedArrival[pedidoId] = true;
+            showToast('🛵 ¡Tu delivery está llegando! Salí a recibirlo.');
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          }
+        }
       }
     }
   });
