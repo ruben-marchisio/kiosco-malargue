@@ -263,7 +263,7 @@ async function savePedidoToDB({ nombre, direccion, calles, pago, coords, subtota
       comercio_id: comercioId,
       cliente_id: clienteId,
       cliente_nombre: nombre || null,
-      cliente_telefono: phone || null,
+      cliente_tel: phone || null,
       direccion: direccion || null,
       entre_calles: calles || null,
       gps_lat: coords?.lat || null,
