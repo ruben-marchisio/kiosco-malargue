@@ -110,7 +110,6 @@ function productRow(p) {
         <div class="prod-thumb">${thumb}</div>
         <div>
           <div style="font-weight:600">${p.nombre}</div>
-          ${p.es_tercero ? `<div class="prod-sub">Vecino: ${p.proveedor_nombre || '—'}</div>` : ''}
         </div>
       </div>
     </td>
@@ -221,8 +220,6 @@ function openProductModal(prod) {
   document.getElementById('f-categoria').value = prod?.categoria || 'otros';
   document.getElementById('f-precio').value = prod?.precio || '';
   document.getElementById('f-imagen').value = prod?.imagen_url || '';
-  document.getElementById('f-tercero').checked = prod?.es_tercero || false;
-  document.getElementById('f-proveedor').value = prod?.proveedor_nombre || '';
   document.getElementById('f-disponible').checked = prod?.disponible ?? true;
   // Reset estado de imagen
   document.getElementById('f-imagen-file').value = '';
@@ -396,8 +393,8 @@ export function initStock() {
       categoria: document.getElementById('f-categoria').value,
       precio: parseFloat(document.getElementById('f-precio').value),
       imagen_url: document.getElementById('f-imagen').value.trim() || null,
-      es_tercero: document.getElementById('f-tercero').checked,
-      proveedor_nombre: document.getElementById('f-proveedor').value.trim() || null,
+      es_tercero: false,
+      proveedor_nombre: null,
       disponible: document.getElementById('f-disponible').checked,
       comercio_id: miComercio?.id || null, // ← asignar al comercio activo
     };
