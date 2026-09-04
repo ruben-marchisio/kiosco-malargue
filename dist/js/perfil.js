@@ -1,3 +1,4 @@
+/* global L */
 import { supabase } from './api.js';
 import { closeCart } from './cart.js';
 import { closeSearch } from './search.js';
@@ -218,7 +219,7 @@ async function startListeningMotoGps() {
   gpsChannel.on('presence', { event: 'sync' }, () => {
     const state = gpsChannel.presenceState();
     // state contiene todos los usuarios transmitiendo
-    for (let key in state) {
+    for (const key in state) {
       state[key].forEach((pres) => {
         if (pres.lat && pres.lng && pres.repartidor_id) {
           updateMotoPosition(pres.repartidor_id, pres.lat, pres.lng);

@@ -139,5 +139,28 @@ document.addEventListener('kiosco:stockPatched', () => renderProducts());
 document.addEventListener('kiosco:catalogChanged', () => loadProducts());
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(console.error);
+  navigator.serviceWorker
+    .register('/sw.js')
+    .then((reg) => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          // Cuando el nuevo service worker toma el control, recargamos la pestaña
+          if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+            console.log('Nueva versión disponible. Recargando la app...');
+            window.location.reload();
+          }
+        });
+      });
+    })
+    .catch(console.error);
+
+  // Refresco de seguridad si el controlador cambia abruptamente (por el claim)
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
 }
