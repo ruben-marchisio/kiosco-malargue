@@ -1,3 +1,4 @@
+/* global ENVIO_CONFIG */
 /* =============================================
    Módulo de checkout — formulario, GPS, envío WA
    Guarda pedidos en Supabase + envía por WhatsApp
@@ -44,8 +45,89 @@ const locationBtnText = document.getElementById('location-btn-text');
 const locationHint = document.getElementById('location-hint');
 
 let gpsCoords = null; // { lat, lng }
+let currentStoreCoords = null;
+let currentEnvioCosto = 0;
 
 // ── Helpers ───────────────────────────────────
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la tierra en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c * 1.3; // Factor 1.3 para estimar calles
+}
+
+async function updateCheckoutTotal() {
+  const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
+  const subtotalEl = document.getElementById('chk-subtotal');
+  if (subtotalEl) subtotalEl.textContent = `$${fmt(subtotal)}`;
+
+  const summaryDiv = document.getElementById('checkout-summary');
+  const envioTotal = document.getElementById('chk-envio');
+  const distInfo = document.getElementById('chk-dist');
+  const grandTotal = document.getElementById('chk-total');
+
+  if (summaryDiv) summaryDiv.style.display = 'block';
+
+  if (!gpsCoords) {
+    if (envioTotal) envioTotal.textContent = 'A calcular';
+    if (distInfo) distInfo.textContent = '';
+    if (grandTotal) grandTotal.textContent = `$${fmt(subtotal)} + Envío`;
+    currentEnvioCosto = 0;
+    return;
+  }
+
+  if (!currentStoreCoords) {
+    if (envioTotal) envioTotal.textContent = 'Calculando...';
+    const storeId = await getComercioPrincipalId();
+    if (storeId) {
+      const { data } = await supabase
+        .from('comercios')
+        .select('coords_lat, coords_lng')
+        .eq('id', storeId)
+        .single();
+      if (data && data.coords_lat) currentStoreCoords = data;
+    }
+  }
+
+  // ENVIO_CONFIG es global (de config.js)
+  const cfg =
+    typeof ENVIO_CONFIG !== 'undefined'
+      ? ENVIO_CONFIG
+      : { base: 3000, distanciaBase: 1.5, extraPorKm: 0, maximo: 3000 };
+
+  if (currentStoreCoords) {
+    const dist = calculateDistance(
+      gpsCoords.lat,
+      gpsCoords.lng,
+      currentStoreCoords.coords_lat,
+      currentStoreCoords.coords_lng
+    );
+    let costo = cfg.base;
+    if (dist > cfg.distanciaBase) {
+      const extraKm = dist - cfg.distanciaBase;
+      costo += extraKm * cfg.extraPorKm;
+    }
+    if (costo > cfg.maximo) costo = cfg.maximo;
+    costo = Math.round(costo / 100) * 100;
+
+    currentEnvioCosto = costo;
+    if (distInfo) distInfo.textContent = `(${dist.toFixed(1)} km)`;
+    if (envioTotal) envioTotal.textContent = `$${fmt(costo)}`;
+    if (grandTotal) grandTotal.textContent = `$${fmt(subtotal + costo)}`;
+  } else {
+    currentEnvioCosto = cfg.base;
+    if (envioTotal) envioTotal.textContent = `$${fmt(currentEnvioCosto)}`;
+    if (grandTotal) grandTotal.textContent = `$${fmt(subtotal + currentEnvioCosto)}`;
+  }
+}
+
 function resetLocationBtn() {
   locationBtn.className = 'location-btn';
   locationBtnText.textContent = 'Compartir mi ubicación GPS';
@@ -67,6 +149,7 @@ locationBtn.addEventListener('click', () => {
   if (gpsCoords) {
     gpsCoords = null;
     resetLocationBtn();
+    updateCheckoutTotal();
     return;
   }
   locationBtn.className = 'location-btn loading';
@@ -79,6 +162,7 @@ locationBtn.addEventListener('click', () => {
       locationBtn.className = 'location-btn success';
       locationBtnText.textContent = '✅ Ubicación obtenida · Tocá para quitar';
       locationHint.textContent = `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}`;
+      updateCheckoutTotal();
     },
     (err) => {
       locationBtn.className = 'location-btn error';
@@ -104,6 +188,7 @@ export function openCheckout() {
   callesInput.value = localStorage.getItem('kiosco_calles') || '';
   gpsCoords = null;
   resetLocationBtn();
+  updateCheckoutTotal();
   // Restaurar método de pago guardado
   const savedPago = localStorage.getItem('kiosco_pago') || 'efectivo';
   const pagoRadio = document.querySelector(`input[name="pago"][value="${savedPago}"]`);
@@ -317,7 +402,12 @@ async function submitOrder() {
   localStorage.setItem('kiosco_pago', pago);
 
   const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
-  const envio = PRECIO_ENVIO;
+  const envio =
+    currentEnvioCosto > 0
+      ? currentEnvioCosto
+      : typeof ENVIO_CONFIG !== 'undefined'
+        ? ENVIO_CONFIG.base
+        : 3000;
 
   // Guardar en BD (se espera a que termine para que el navegador móvil no cancele la petición al cambiar a WhatsApp)
   await savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });

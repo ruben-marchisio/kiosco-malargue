@@ -7,5 +7,10 @@ const SUPABASE_URL = 'https://nlnfkdrdssaaynlrnfpj.supabase.co';
 const SUPABASE_ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sbmZrZHJkc3NhYXlubHJuZnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NjMyNTQsImV4cCI6MjEwMTUzOTI1NH0.YFZHdP6L0oxihoVsqqCDASK85hFM7RmdqOlP9xKD-GU';
 const WHATSAPP_NUM = '5492604055198'; // El Pechito — Malargüe
-const PRECIO_ENVIO = 3000; // Precio de envío en $
+const ENVIO_CONFIG = {
+  base: 1500, // Precio para la distancia mínima
+  distanciaBase: 1.5, // Hasta 1.5 km se cobra la base
+  extraPorKm: 500, // Costo extra por cada km adicional
+  maximo: 4000, // Tope máximo del envío
+};
 const ADMIN_EMAIL = 'rubenmarchisio@gmail.com'; // Admin principal

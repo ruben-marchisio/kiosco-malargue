@@ -171,8 +171,7 @@ export function renderCart() {
   });
 
   const subtotal = state.cart.reduce((s, c) => s + c.qty * c.precio, 0);
-  const envio = PRECIO_ENVIO;
   subtotalEl.textContent = `$${fmt(subtotal)}`;
-  envioEl.textContent = `$${fmt(envio)}`;
-  totalEl.textContent = `$${fmt(subtotal + envio)}`;
+  envioEl.innerHTML = `<span style="font-size: 0.9em; font-style: italic;">A calcular al pagar</span>`;
+  totalEl.textContent = `$${fmt(subtotal)} + Envío`;
 }

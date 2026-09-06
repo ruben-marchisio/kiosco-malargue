@@ -83,15 +83,6 @@
         <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar modo oscuro/claro" title="Cambiar tema">
           🌙
         </button>
-        <a
-          href="/admin"
-          class="admin-link-btn"
-          id="admin-link-btn"
-          aria-label="Acceso a Gestión / Mi Cuenta"
-          title="Acceso Panel / Mi Cuenta"
-        >
-          👤
-        </a>
       </div>
     </header>
 
@@ -236,21 +227,39 @@
             <div id="perfil-nombre" style="font-weight: 700; font-size: 16px"></div>
             <div id="perfil-email" style="font-size: 13px; color: var(--text-muted)"></div>
           </div>
-          <button
-            id="btn-logout"
-            style="
-              margin-left: auto;
-              background: #fee2e2;
-              color: #991b1b;
-              border: none;
-              padding: 6px 12px;
-              border-radius: 8px;
-              font-weight: 600;
-              font-size: 12px;
-            "
-          >
-            Salir
-          </button>
+          <div style="margin-left: auto; display: flex; gap: 8px">
+            <button
+              id="btn-admin-panel"
+              style="
+                display: none;
+                background: #000;
+                color: #fff;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 12px;
+                cursor: pointer;
+              "
+            >
+              Panel
+            </button>
+            <button
+              id="btn-logout"
+              style="
+                background: #fee2e2;
+                color: #991b1b;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 12px;
+                cursor: pointer;
+              "
+            >
+              Salir
+            </button>
+          </div>
         </div>
 
         <h3 style="margin-bottom: 16px">🛵 Mis Pedidos Activos</h3>
@@ -460,6 +469,36 @@
               </span>
             </label>
           </div>
+        </div>
+      </div>
+      <div
+        id="checkout-summary"
+        style="padding: 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: none"
+      >
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px">
+          <span>Subtotal:</span>
+          <strong id="chk-subtotal">$0</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px">
+          <span
+            >Envío
+            <span id="chk-dist" style="color: var(--text-muted); font-weight: normal; font-size: 12px"></span>:</span
+          >
+          <strong id="chk-envio">$0</strong>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 8px;
+            margin-top: 8px;
+          "
+        >
+          <span>Total a pagar:</span>
+          <strong id="chk-total" style="color: var(--primary)">$0</strong>
         </div>
       </div>
       <div class="checkout-footer">

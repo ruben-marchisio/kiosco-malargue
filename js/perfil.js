@@ -1,4 +1,4 @@
-/* global L */
+/* global L, ADMIN_EMAIL */
 import { supabase } from './api.js';
 import { closeCart } from './cart.js';
 import { closeSearch } from './search.js';
@@ -67,7 +67,7 @@ function showUnauthUI() {
   perfilAuth.style.display = 'none';
 }
 
-function showAuthUI() {
+async function showAuthUI() {
   perfilUnauth.style.display = 'none';
   perfilAuth.style.display = 'block';
 
@@ -75,6 +75,35 @@ function showAuthUI() {
   perfilEmail.textContent = currentUser.email || '';
   perfilAvatar.src =
     currentUser.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=U&background=random';
+
+  // Verificar rol para mostrar botón de panel admin/moto
+  const btnAdminPanel = document.getElementById('btn-admin-panel');
+  if (btnAdminPanel) {
+    btnAdminPanel.style.display = 'none'; // reset por si acaso
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('rol')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      const adminEmail = (typeof ADMIN_EMAIL !== 'undefined' ? ADMIN_EMAIL : '')
+        .toLowerCase()
+        .trim();
+      const userEmail = (currentUser.email || '').toLowerCase().trim();
+      const rol = data?.rol ?? (userEmail === adminEmail && userEmail !== '' ? 'admin' : null);
+
+      if (rol) {
+        btnAdminPanel.style.display = 'inline-block';
+        btnAdminPanel.onclick = () => {
+          if (rol === 'moto') window.location.href = '/moto';
+          else window.location.href = '/admin';
+        };
+      }
+    } catch (e) {
+      console.warn('Error verificando rol:', e);
+    }
+  }
 }
 
 if (btnLoginGoogle) {
