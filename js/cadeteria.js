@@ -1,4 +1,4 @@
-/* global L, ENVIO_CONFIG */
+/* global L, ENVIO_CONFIG, CADETERIA_LOCAL_COORDS */
 import { supabase } from './api.js';
 import { calculateDistance } from './checkout.js';
 import { fmt, showToast } from './utils.js';
@@ -33,6 +33,9 @@ const hintFacturaLoc = document.getElementById('cad-hint-factura-loc');
 const mapSheet = document.getElementById('cad-map-sheet');
 const btnCloseMap = document.getElementById('close-cad-map');
 const btnConfirmMap = document.getElementById('cad-confirm-map-btn');
+const dirInput = document.getElementById('cad-dir-input');
+const dirBuscar = document.getElementById('cad-dir-buscar');
+const dirHint = document.getElementById('cad-dir-hint');
 
 // Botón de confirmar
 const btnConfirm = document.getElementById('cad-confirm-btn');
@@ -135,9 +138,11 @@ btnFacturaLoc?.addEventListener('click', () => {
 // ── OBTENER GPS DE DESTINO (MAPA INTERACTIVO) ───────────────
 function initMap() {
   if (mapInstance) return;
-  // Centro por defecto en Malargüe
-  const centerLat = -35.4752;
-  const centerLng = -69.5855;
+  // Centro por defecto: ubicación real del local
+  const centerLat =
+    typeof CADETERIA_LOCAL_COORDS !== 'undefined' ? CADETERIA_LOCAL_COORDS.lat : -35.5069891;
+  const centerLng =
+    typeof CADETERIA_LOCAL_COORDS !== 'undefined' ? CADETERIA_LOCAL_COORDS.lng : -69.5826686;
 
   mapInstance = L.map('cad-map').setView([centerLat, centerLng], 14);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -170,13 +175,71 @@ btnCloseMap?.addEventListener('click', () => {
   document.body.style.overflow = '';
 });
 
+// ── BUSCADOR DE DIRECCIÓN (PUNTO B) ────────────────────────
+async function buscarDireccion() {
+  const texto = dirInput?.value.trim();
+  if (!texto) {
+    if (dirHint) dirHint.textContent = '⚠️ Escribí una dirección primero.';
+    return;
+  }
+
+  if (dirHint) dirHint.textContent = '🔍 Buscando...';
+  if (dirBuscar) dirBuscar.disabled = true;
+
+  try {
+    // Nominatim: buscamos en contexto de Malargüe para mayor precisión
+    const query = encodeURIComponent(`${texto}, Malargüe, Mendoza, Argentina`);
+    const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=ar`;
+    const res = await fetch(url, {
+      headers: { 'Accept-Language': 'es', 'User-Agent': 'KioscoMalargue/1.0' },
+    });
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      if (dirHint)
+        dirHint.textContent =
+          '❌ No encontré esa dirección. Revisá el texto o mové el mapa manualmente.';
+      return;
+    }
+
+    const { lat, lon, display_name } = data[0];
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lon);
+
+    // Centramos el mapa en la dirección encontrada
+    mapInstance.setView([latNum, lngNum], 16);
+
+    // Mostramos nombre corto (hasta la primera coma)
+    const nombreCorto = display_name.split(',').slice(0, 2).join(',');
+    if (dirHint) {
+      dirHint.style.color = 'var(--success, #22c55e)';
+      dirHint.textContent = `✅ ${nombreCorto}`;
+    }
+  } catch {
+    if (dirHint) dirHint.textContent = '❌ Error de conexión. Mové el mapa manualmente.';
+  } finally {
+    if (dirBuscar) dirBuscar.disabled = false;
+  }
+}
+
+dirBuscar?.addEventListener('click', buscarDireccion);
+dirInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    buscarDireccion();
+  }
+});
+
 btnConfirmMap?.addEventListener('click', () => {
   const center = mapInstance.getCenter();
   coordsDestino = { lat: center.lat, lng: center.lng };
 
   btnDestino.classList.remove('outline');
   btnDestino.classList.add('success');
-  btnDestino.innerHTML = '✅ Destino marcado en mapa';
+
+  // Si habían escrito una dirección, la mostramos como label
+  const dirTexto = dirInput?.value.trim();
+  btnDestino.innerHTML = dirTexto ? `✅ ${dirTexto}` : '✅ Destino marcado en mapa';
   hintDestino.textContent = `${coordsDestino.lat.toFixed(5)}, ${coordsDestino.lng.toFixed(5)}`;
 
   mapSheet.classList.remove('open');
@@ -229,13 +292,15 @@ function updateCostSummary() {
     const montoFactura = parseFloat(document.getElementById('cad-factura-monto').value) || 0;
     cadCostFactura.textContent = `$${fmt(montoFactura)}`;
 
-    // El costo de factura es: Costo de espera (4000) + Comisión app (1000) + Costo de viaje (desde local hasta cliente)
-    // Asumimos que el local (origen) está en Malargüe centro.
+    // El costo de factura es: Costo de espera (4000) + Comisión app (1000) + Costo de viaje (desde el local hasta el cliente)
+    const localLat =
+      typeof CADETERIA_LOCAL_COORDS !== 'undefined' ? CADETERIA_LOCAL_COORDS.lat : -35.5069891;
+    const localLng =
+      typeof CADETERIA_LOCAL_COORDS !== 'undefined' ? CADETERIA_LOCAL_COORDS.lng : -69.5826686;
     let costoLogistica = COSTO_ESPERA_FACTURA + COMISION_FACTURA;
 
     if (coordsFactura) {
-      // Coordenadas aproximadas del centro de Malargüe (Local)
-      const dist = calculateDistance(-35.4752, -69.5855, coordsFactura.lat, coordsFactura.lng);
+      const dist = calculateDistance(localLat, localLng, coordsFactura.lat, coordsFactura.lng);
       const costoViaje = calcularCostoDistancia(dist);
       costoLogistica += costoViaje;
       cadDistLabel.textContent = `(Espera + ${dist.toFixed(1)} km)`;
@@ -314,7 +379,11 @@ btnConfirm?.addEventListener('click', async () => {
       return showToast('⚠️ Ingresa un monto de factura válido.');
     if (!coordsFactura) return showToast('⚠️ Debes compartir tu ubicación GPS.');
 
-    const dist = calculateDistance(-35.4752, -69.5855, coordsFactura.lat, coordsFactura.lng);
+    const localLat =
+      typeof CADETERIA_LOCAL_COORDS !== 'undefined' ? CADETERIA_LOCAL_COORDS.lat : -35.5069891;
+    const localLng =
+      typeof CADETERIA_LOCAL_COORDS !== 'undefined' ? CADETERIA_LOCAL_COORDS.lng : -69.5826686;
+    const dist = calculateDistance(localLat, localLng, coordsFactura.lat, coordsFactura.lng);
     const costoViaje = calcularCostoDistancia(dist);
     const costoLogistica = COSTO_ESPERA_FACTURA + COMISION_FACTURA + costoViaje;
     const total = monto + costoLogistica;

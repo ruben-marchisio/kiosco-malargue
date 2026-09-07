@@ -742,10 +742,51 @@
         <button class="close-btn" id="close-cad-map" aria-label="Cerrar mapa">✕</button>
       </div>
       <div class="checkout-body" style="padding: 0; display: flex; flex-direction: column">
-        <div id="cad-map" style="height: 300px; width: 100%; z-index: 1"></div>
+        <!-- Buscador de dirección -->
+        <div style="padding: 12px 16px 8px; border-bottom: 1px solid var(--border)">
+          <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text)">
+            📝 Escribí la dirección de entrega
+          </p>
+          <div style="display: flex; gap: 8px">
+            <input
+              type="text"
+              id="cad-dir-input"
+              placeholder="Ej: San Martín 420"
+              style="
+                flex: 1;
+                padding: 10px 12px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border);
+                background: var(--surface);
+                color: var(--text);
+                font-size: 14px;
+                outline: none;
+              "
+            />
+            <button
+              id="cad-dir-buscar"
+              type="button"
+              style="
+                padding: 10px 16px;
+                border-radius: 10px;
+                background: var(--primary);
+                color: #fff;
+                border: none;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                white-space: nowrap;
+              "
+            >
+              Buscar
+            </button>
+          </div>
+          <p id="cad-dir-hint" style="font-size: 12px; color: var(--text-muted); margin-top: 6px; min-height: 16px"></p>
+        </div>
+        <div id="cad-map" style="height: 260px; width: 100%; z-index: 1"></div>
         <div style="padding: 16px">
           <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px">
-            Arrastra el mapa para ubicar el marcador rojo exactamente en el punto de entrega.
+            Ajustá arrastrando el mapa si es necesario y confirmá el punto exacto.
           </p>
           <button class="whatsapp-btn" id="cad-confirm-map-btn" type="button">Confirmar Destino</button>
         </div>

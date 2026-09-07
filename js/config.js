@@ -14,3 +14,10 @@ const ENVIO_CONFIG = {
   maximo: 4000, // Tope máximo del envío
 };
 const ADMIN_EMAIL = 'rubenmarchisio@gmail.com'; // Admin principal
+
+// ── Cadetería: local propio ───────────────────────────────────
+// El servicio de Pago de Factura calcula la distancia desde
+// estas coordenadas (la ubicación real del local) hasta el cliente.
+// Si el local se mueve, actualizar coords_lat y coords_lng aquí.
+const CADETERIA_LOCAL_ID = 'f3796263-b059-4cfa-9f7e-cb79918a7196'; // El Pechito
+const CADETERIA_LOCAL_COORDS = { lat: -35.5069891, lng: -69.5826686 }; // El Pechito
