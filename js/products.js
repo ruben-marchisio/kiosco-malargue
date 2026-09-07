@@ -2,6 +2,7 @@
    Módulo de productos — catálogo, render, categorías
    Multi-comercio: filtra por store seleccionado
    ============================================= */
+/* global ENVIO_CONFIG */
 
 import { supabase } from './api.js';
 import { state } from './state.js';
@@ -9,6 +10,8 @@ import { fmt, skeletons, showToast } from './utils.js';
 import { getCachedCatalog, setCatalogCache } from './cache.js';
 import { initFromConfig } from './store-status.js';
 import { selectedStore, RUBRO_EMOJI } from './stores.js';
+import { getUserLocation } from './perfil.js';
+import { calculateDistance } from './checkout.js';
 
 // ── Constantes ────────────────────────────────
 // ⚠️ Estas categorías deben mantenerse sincronizadas con VALID_CATS en admin/js/stock.js
@@ -74,9 +77,48 @@ export function selectCategory(id, label) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Carga ─────────────────────────────────────
+// ── Carga ──────────────────────────────
+function updateEnvioBanner() {
+  const banner = document.getElementById('envio-banner');
+  const bannerText = document.getElementById('envio-banner-text');
+  if (!banner || !bannerText) return;
+
+  const loc = getUserLocation();
+  const store = selectedStore;
+
+  if (!loc) {
+    // Sin ubicación guardada
+    banner.style.display = 'block';
+    bannerText.innerHTML = '📍 <span style="color:var(--text-muted)">Guardá tu ubicación en Mi Perfil para ver el costo de envío</span>';
+    banner.onclick = () => document.getElementById('nav-perfil')?.click();
+    return;
+  }
+
+  if (store?.coords_lat && store?.coords_lng) {
+    const dist = calculateDistance(loc.lat, loc.lng, store.coords_lat, store.coords_lng);
+    // Cálculo rápido del costo (misma lógica que checkout)
+    const cfg = typeof ENVIO_CONFIG !== 'undefined'
+      ? ENVIO_CONFIG
+      : { base: 1500, distanciaBase: 1.5, extraPorKm: 500, maximo: 4000 };
+    let costo = cfg.base;
+    if (dist > cfg.distanciaBase) costo += (dist - cfg.distanciaBase) * cfg.extraPorKm;
+    if (costo > cfg.maximo) costo = cfg.maximo;
+    costo = Math.round(costo / 100) * 100;
+    const distLabel = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+    banner.style.display = 'block';
+    bannerText.innerHTML = `🛵 Envío estimado: <strong>$${fmt(costo)}</strong> <span style="color:var(--text-muted)">~${distLabel} de distancia</span>`;
+    banner.onclick = null;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// Actualizar el banner cuando cambia la ubicación del usuario
+document.addEventListener('kiosco:locationSaved', updateEnvioBanner);
+
 export async function loadProducts() {
   gridEl.innerHTML = skeletons(6);
+  updateEnvioBanner();
 
   // Si hay un comercio seleccionado → cargar SUS productos directamente
   if (selectedStore) {

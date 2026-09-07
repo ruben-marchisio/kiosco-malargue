@@ -14,6 +14,10 @@ import {
 } from './stores.js';
 import { state, saveCart } from './state.js';
 import { updateBadge } from './cart.js';
+import { getUserLocation } from './perfil.js';
+import { calculateDistance } from './checkout.js';
+
+/* global L */
 
 // ── DOM refs ──────────────────────────────────
 const homeView = document.getElementById('home-view');
@@ -134,6 +138,14 @@ function startBannerRotation() {
 }
 
 // ── Render grilla de COMERCIOS ────────────────
+function distanceBadge(comercio) {
+  const loc = getUserLocation();
+  if (!loc || !comercio.coords_lat || !comercio.coords_lng) return '';
+  const dist = calculateDistance(loc.lat, loc.lng, comercio.coords_lat, comercio.coords_lng);
+  const label = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+  return `<span class="store-meta-item" style="color: var(--primary); font-weight: 700">📍 ${label}</span>`;
+}
+
 function storeCard(comercio) {
   const emoji = RUBRO_EMOJI[comercio.rubro] || '🏪';
   const abierto = comercio.abierto !== false; // default true si el campo no existe
@@ -146,6 +158,7 @@ function storeCard(comercio) {
     : `<span class="store-badge store-badge-closed">🔴 Cerrado</span>`;
 
   const metaItems = [
+    distanceBadge(comercio),
     comercio.horario_texto
       ? `<span class="store-meta-item">🕒 ${comercio.horario_texto}</span>`
       : '',
@@ -293,4 +306,141 @@ export async function initHomeView() {
 
   const stores = await loadStores();
   renderStoreGrid(stores);
+
+  // Re-renderizar tarjetas cuando el usuario guarda/borra su ubicación
+  document.addEventListener('kiosco:locationSaved', () => {
+    renderStoreGrid(stores);
+  });
+
+  // Mapa de locales
+  initLocalesMapButton(stores);
 }
+
+// ── MAPA DE LOCALES (Radar) ───────────────────
+let localesMapInstance = null;
+
+function initLocalesMapButton(stores) {
+  const btnVerMapa = document.getElementById('btn-ver-mapa');
+  const mapSheet = document.getElementById('locales-map-sheet');
+  const overlay = document.getElementById('locales-map-overlay');
+  const btnClose = document.getElementById('close-locales-map');
+
+  function openMap() {
+    if (!mapSheet) return;
+    mapSheet.classList.add('open');
+    if (overlay) overlay.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => buildLocalesMap(stores), 300);
+  }
+
+  function closeMap() {
+    mapSheet?.classList.remove('open');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  btnVerMapa?.addEventListener('click', openMap);
+  btnClose?.addEventListener('click', closeMap);
+  overlay?.addEventListener('click', closeMap);
+}
+
+function buildLocalesMap(stores) {
+  if (localesMapInstance) {
+    localesMapInstance.invalidateSize();
+    return;
+  }
+
+  // Centro por defecto: Malargüe
+  localesMapInstance = L.map('locales-map').setView([-35.4950, -69.5840], 14);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+  }).addTo(localesMapInstance);
+
+  const bounds = [];
+
+  // Marcadores de locales
+  stores.forEach((s) => {
+    if (!s.coords_lat || !s.coords_lng) return;
+    const abierto = s.abierto !== false;
+    const color = abierto ? '#22c55e' : '#ef4444';
+    const emoji = abierto ? '🟢' : '🔴';
+
+    const icon = L.divIcon({
+      html: `<div style="
+        background: ${color};
+        color: #fff;
+        border-radius: 50%;
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+        border: 3px solid #fff;
+      ">${emoji}</div>`,
+      className: '',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+    });
+
+    const marker = L.marker([s.coords_lat, s.coords_lng], { icon }).addTo(localesMapInstance);
+    bounds.push([s.coords_lat, s.coords_lng]);
+
+    const popupContent = `
+      <div style="font-family: inherit; min-width: 150px">
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px">${s.nombre}</div>
+        <div style="font-size: 12px; color: ${color}; margin-bottom: ${abierto ? '10px' : '0'}">${abierto ? '🟢 Abierto' : '🔴 Cerrado'}</div>
+        ${
+          abierto
+            ? `<button
+            onclick="document.getElementById('locales-map-sheet').classList.remove('open');
+                     document.getElementById('locales-map-overlay').style.display='none';
+                     document.body.style.overflow='';
+                     document.dispatchEvent(new CustomEvent('kiosco:openStore',{detail:'${s.id}'}));"
+            style="width:100%;padding:8px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px"
+          >Ver productos →</button>`
+            : ''
+        }
+      </div>`;
+
+    marker.bindPopup(popupContent, { maxWidth: 210, offset: [0, -12] });
+  });
+
+  // Marcador del usuario
+  const loc = getUserLocation();
+  if (loc) {
+    const userIcon = L.divIcon({
+      html: `<div style="
+        background: #3b82f6;
+        color: #fff;
+        border-radius: 50%;
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 2px 10px rgba(59,130,246,0.5);
+        border: 3px solid #fff;
+      ">📍</div>`,
+      className: '',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+    });
+    L.marker([loc.lat, loc.lng], { icon: userIcon })
+      .addTo(localesMapInstance)
+      .bindPopup(
+        `<strong>Vos estás aquí</strong><br><span style="font-size:12px;color:#666">${loc.label}</span>`
+      );
+    bounds.push([loc.lat, loc.lng]);
+  }
+
+  // Ajustar zoom para que entren todos
+  if (bounds.length > 1) {
+    localesMapInstance.fitBounds(bounds, { padding: [48, 48] });
+  } else if (bounds.length === 1) {
+    localesMapInstance.setView(bounds[0], 15);
+  }
+
+  // Navegar al local desde el popup
+  document.addEventListener('kiosco:openStore', (e) => {
+    const store = stores.find((s) => s.id === e.detail);
+    if (store && store.abierto !== false) handleStoreSelect(store);
+  });
+}
+

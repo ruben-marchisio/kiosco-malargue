@@ -1,4 +1,28 @@
 /* global L, ADMIN_EMAIL */
+// ── Ubicación del usuario (localStorage) ─────
+const LOCATION_KEY = 'kiosco_user_location';
+
+export function getUserLocation() {
+  try {
+    const raw = localStorage.getItem(LOCATION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveUserLocation(lat, lng, label) {
+  const loc = { lat, lng, label: label || `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
+  localStorage.setItem(LOCATION_KEY, JSON.stringify(loc));
+  // Notificar a otros módulos (home, products) para que recalculen distancias
+  document.dispatchEvent(new CustomEvent('kiosco:locationSaved', { detail: loc }));
+  return loc;
+}
+
+export function clearUserLocation() {
+  localStorage.removeItem(LOCATION_KEY);
+  document.dispatchEvent(new CustomEvent('kiosco:locationSaved', { detail: null }));
+}
 import { supabase } from './api.js';
 import { closeCart } from './cart.js';
 import { closeSearch } from './search.js';
@@ -106,6 +130,120 @@ async function showAuthUI() {
     } catch (e) {
       console.warn('Error verificando rol:', e);
     }
+  }
+
+  // Renderizar la sección de ubicación
+  renderLocationSection();
+}
+
+// ── UI de Ubicación en Perfil ─────────────────
+function renderLocationSection() {
+  const container = document.getElementById('perfil-location-section');
+  if (!container) return;
+
+  const loc = getUserLocation();
+  const locLabel = loc ? loc.label : null;
+
+  container.innerHTML = `
+    <div style="margin-bottom: 12px">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px">
+        <div style="width: 36px; height: 36px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px">📍</div>
+        <div>
+          <div style="font-weight: 700; font-size: 14px">Mi ubicación</div>
+          <div id="perfil-loc-label" style="font-size: 12px; color: var(--text-muted)">
+            ${locLabel ? `✅ ${locLabel}` : 'No configurada aún'}
+          </div>
+        </div>
+        ${loc ? `<button id="btn-loc-clear" style="margin-left: auto; background: #fee2e2; color: #991b1b; border: none; padding: 5px 10px; border-radius: 8px; font-size: 12px; cursor: pointer">Borrar</button>` : ''}
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button id="btn-loc-gps" style="flex: 1; padding: 10px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer">📡 Usar GPS</button>
+        <button id="btn-loc-dir" style="flex: 1; padding: 10px; background: var(--surface); color: var(--text); border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer">✏️ Por dirección</button>
+      </div>
+      <div id="perfil-loc-dir-wrap" style="display: none; margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap">
+        <input id="perfil-loc-dir-input" type="text" placeholder="Ej: San Martín 420" style="flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px" />
+        <button id="btn-loc-dir-buscar" style="padding: 10px 16px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer">Buscar</button>
+      </div>
+      <p id="perfil-loc-status" style="font-size: 12px; color: var(--text-muted); margin-top: 6px; min-height: 16px"></p>
+    </div>
+  `;
+
+  // Wiring de botones
+  document.getElementById('btn-loc-gps')?.addEventListener('click', handleLocGps);
+  document.getElementById('btn-loc-dir')?.addEventListener('click', () => {
+    const wrap = document.getElementById('perfil-loc-dir-wrap');
+    if (wrap) wrap.style.display = wrap.style.display === 'none' ? 'flex' : 'none';
+  });
+  document.getElementById('btn-loc-dir-buscar')?.addEventListener('click', handleLocDir);
+  document.getElementById('perfil-loc-dir-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleLocDir(); }
+  });
+  document.getElementById('btn-loc-clear')?.addEventListener('click', () => {
+    clearUserLocation();
+    renderLocationSection();
+    import('./utils.js').then(({ showToast }) => showToast('Ubicación eliminada'));
+  });
+}
+
+function handleLocGps() {
+  const status = document.getElementById('perfil-loc-status');
+  if (status) status.textContent = '📡 Obteniendo ubicación...';
+  if (!navigator.geolocation) {
+    if (status) status.textContent = '❌ GPS no disponible en este dispositivo.';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      // Geocoding inverso para obtener el nombre de la calle
+      let label = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`,
+          { headers: { 'User-Agent': 'KioscoMalargue/1.0' } }
+        );
+        const data = await res.json();
+        if (data?.address) {
+          const { road, house_number, suburb } = data.address;
+          label = [road, house_number, suburb].filter(Boolean).join(' ');
+        }
+      } catch { /* usar coords como label */ }
+      saveUserLocation(lat, lng, label);
+      renderLocationSection();
+      showToast('✅ Ubicación guardada');
+    },
+    () => {
+      if (document.getElementById('perfil-loc-status'))
+        document.getElementById('perfil-loc-status').textContent = '❌ Permiso denegado. Activá el GPS.';
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+async function handleLocDir() {
+  const input = document.getElementById('perfil-loc-dir-input');
+  const status = document.getElementById('perfil-loc-status');
+  const texto = input?.value.trim();
+  if (!texto) { if (status) status.textContent = '⚠️ Escribí una dirección.'; return; }
+  if (status) status.textContent = '🔍 Buscando...';
+  try {
+    const query = encodeURIComponent(`${texto}, Malargüe, Mendoza, Argentina`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=ar`,
+      { headers: { 'Accept-Language': 'es', 'User-Agent': 'KioscoMalargue/1.0' } }
+    );
+    const data = await res.json();
+    if (!data?.length) {
+      if (status) status.textContent = '❌ No encontré esa dirección. Intentá con otra.';
+      return;
+    }
+    const { lat, lon, display_name } = data[0];
+    const label = display_name.split(',').slice(0, 2).join(',').trim();
+    saveUserLocation(parseFloat(lat), parseFloat(lon), label);
+    renderLocationSection();
+    showToast('✅ Ubicación guardada');
+  } catch {
+    if (status) status.textContent = '❌ Error de conexión. Intentá con GPS.';
   }
 }
 
