@@ -13,6 +13,9 @@ let myRepId = null;
 let myNombre = 'Repartidor';
 let realtimeCh = null;
 let activeTrip = null;
+let enLinea = false;          // Estado de disponibilidad
+let lastPedidoCount = null;    // Para detectar pedidos nuevos
+let alertTimeout = null;       // Para ocultar la alerta auto
 
 // ── Variables GPS ─────────────────────────────
 let gpsChannel = null;
@@ -55,6 +58,7 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
+  await setEnLinea(false);
   if (realtimeCh) await supabase.removeChannel(realtimeCh);
   stopGpsTracking();
   await supabase.auth.signOut();
@@ -72,14 +76,17 @@ async function showApp() {
   await loadRepartidor();
   await loadAll();
   subscribeRealtime();
-  startGpsTracking(); // Iniciar transmisión de ubicación
+  startGpsTracking();
+  initDisponibilidad();
+  // Al cerrar el tab, marcar como no disponible
+  window.addEventListener('beforeunload', () => setEnLinea(false));
 }
 
 // ── Cargar datos del repartidor ─────────────────
 async function loadRepartidor() {
   const { data } = await supabase
     .from('repartidores')
-    .select('id, nombre')
+    .select('id, nombre, en_linea')
     .eq('user_id', myUserId)
     .eq('activo', true)
     .maybeSingle();
@@ -87,7 +94,9 @@ async function loadRepartidor() {
   if (data) {
     myRepId = data.id;
     myNombre = data.nombre;
+    enLinea = data.en_linea ?? false;
     document.getElementById('rep-name').textContent = data.nombre;
+    updateDisponibilidadUI();
   } else {
     document.getElementById('rep-name').textContent = 'Repartidor';
   }
@@ -155,7 +164,7 @@ async function checkActiveTrip() {
   activeTrip = data;
 }
 
-// ── Realtime ────────────────────────────────────
+// ── Realtime ───────────────────────────────
 function subscribeRealtime() {
   if (realtimeCh) supabase.removeChannel(realtimeCh);
 
@@ -168,9 +177,106 @@ function subscribeRealtime() {
         schema: 'public',
         table: 'pedidos',
       },
-      () => loadAll()
+      (payload) => {
+        // Detectar pedido nuevo (INSERT) para alertar
+        if (payload.eventType === 'INSERT') {
+          triggerNewOrderAlert();
+        }
+        loadAll();
+      }
     )
     .subscribe();
+}
+
+// ── Disponibilidad (toggle en_linea) ───────────
+function initDisponibilidad() {
+  const btn = document.getElementById('btn-disponibilidad');
+  if (!btn) return;
+  btn.addEventListener('click', () => setEnLinea(!enLinea));
+  updateDisponibilidadUI();
+}
+
+function updateDisponibilidadUI() {
+  const btn = document.getElementById('btn-disponibilidad');
+  if (!btn) return;
+  if (enLinea) {
+    btn.textContent = '🟢 Disponible';
+    btn.classList.remove('no-disponible');
+    btn.style.background = '#1a3a1a';
+    btn.style.color = '#4ade80';
+  } else {
+    btn.textContent = '🔴 No disponible';
+    btn.classList.add('no-disponible');
+    btn.style.background = '#3a1a1a';
+    btn.style.color = '#f87171';
+  }
+}
+
+async function setEnLinea(estado) {
+  enLinea = estado;
+  updateDisponibilidadUI();
+  if (!myRepId) return;
+  try {
+    await supabase
+      .from('repartidores')
+      .update({ en_linea: estado })
+      .eq('id', myRepId);
+  } catch (e) {
+    console.warn('No se pudo actualizar en_linea:', e);
+  }
+}
+
+// ── Alerta de nuevo pedido ──────────────────
+function triggerNewOrderAlert() {
+  // 1) Sonido (Web Audio API — funciona sin archivos externos)
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Tres bips ascendentes
+    [0, 0.15, 0.30].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 600 + i * 150;
+      gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.13);
+    });
+  } catch { /* silencioso si no soportado */ }
+
+  // 2) Vibración (patrón: 3 pulsos)
+  if (navigator.vibrate) {
+    navigator.vibrate([300, 100, 300, 100, 300]);
+  }
+
+  // 3) Banner visual naranja
+  const alerta = document.getElementById('alerta-pedido');
+  if (alerta) {
+    alerta.style.display = 'block';
+    alerta.onclick = () => {
+      alerta.style.display = 'none';
+      // Ir a la pestaña Radar
+      document.getElementById('tab-btn-radar')?.click();
+    };
+    // Se oculta solo a los 8 segundos si no tocaron
+    clearTimeout(alertTimeout);
+    alertTimeout = setTimeout(() => { alerta.style.display = 'none'; }, 8000);
+  }
+
+  // 4) Notificación del navegador (si tiene permiso)
+  if (Notification.permission === 'granted') {
+    new Notification('🚨 Nuevo pedido recibido', {
+      body: 'Hay un nuevo pedido. Abrí la app para verlo.',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      vibrate: [300, 100, 300],
+      requireInteraction: true,
+    });
+  } else if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 }
 
 // ── Tab Radar (En Preparación) ──────────────────

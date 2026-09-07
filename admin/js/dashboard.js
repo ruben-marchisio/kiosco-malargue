@@ -5,6 +5,8 @@
 import { supabase, fmt } from './supabase-client.js';
 import { miComercio } from './admin.js';
 
+let motosRealtimeCh = null;
+
 export async function loadDashboard() {
   const today = new Date().toISOString().split('T')[0];
 
@@ -67,4 +69,73 @@ export async function loadDashboard() {
       alertCard.style.display = 'none';
     }
   }
+
+  // Widget de motos (solo admin)
+  if (!miComercio) {
+    await loadMotasWidget();
+    subscribeMotasRealtime();
+  }
+}
+
+// ── Widget motos en línea ──────────────────────
+async function loadMotasWidget() {
+  const container = document.getElementById('widget-motos');
+  if (!container) return;
+
+  const { data: motos } = await supabase
+    .from('repartidores')
+    .select('id, nombre, vehiculo, en_linea, activo')
+    .eq('activo', true)
+    .order('nombre');
+
+  if (!motos || motos.length === 0) {
+    container.innerHTML = `<p style="color:#6b7280; font-size:14px;">No hay repartidores registrados aún.</p>`;
+    return;
+  }
+
+  const enLinea = motos.filter((m) => m.en_linea);
+  const offline = motos.filter((m) => !m.en_linea);
+
+  container.innerHTML = `
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <span style="background:#d1fae5; color:#065f46; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700">
+        🟢 ${enLinea.length} disponible${enLinea.length !== 1 ? 's' : ''}
+      </span>
+      <span style="background:#fee2e2; color:#991b1b; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700">
+        🔴 ${offline.length} fuera de línea
+      </span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      ${motos.map((m) => `
+        <div style="
+          display:flex; align-items:center; gap:10px;
+          padding:10px 14px;
+          background: ${m.en_linea ? '#f0fdf4' : '#fafafa'};
+          border: 1px solid ${m.en_linea ? '#86efac' : '#e5e7eb'};
+          border-radius:10px;
+        ">
+          <span style="font-size:22px">${m.en_linea ? '🟢' : '⚫'}</span>
+          <div style="flex:1">
+            <div style="font-weight:700; font-size:14px">${m.nombre}</div>
+            <div style="font-size:12px; color:#6b7280">${m.vehiculo || 'Moto'}</div>
+          </div>
+          <span style="
+            font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px;
+            background: ${m.en_linea ? '#dcfce7' : '#f3f4f6'};
+            color: ${m.en_linea ? '#166534' : '#6b7280'};
+          ">${m.en_linea ? 'Disponible' : 'Fuera de línea'}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function subscribeMotasRealtime() {
+  if (motosRealtimeCh) return; // ya suscripto
+  motosRealtimeCh = supabase
+    .channel('admin-motos')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'repartidores' }, () =>
+      loadMotasWidget()
+    )
+    .subscribe();
 }

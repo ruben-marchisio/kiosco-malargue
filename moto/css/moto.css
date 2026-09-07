@@ -613,3 +613,16 @@ body {
   background: var(--border);
   border-radius: 2px;
 }
+
+/* ── Alerta de nuevo pedido ─────────────────── */
+@keyframes pulse-alert {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50%       { opacity: 0.88; transform: scaleY(1.015); }
+}
+
+/* ── Toggle de disponibilidad ───────────────── */
+#btn-disponibilidad.no-disponible {
+  background: #3a1a1a;
+  color: #f87171;
+}
+
