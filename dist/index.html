@@ -104,6 +104,16 @@
       <!-- Banners -->
       <div class="banners-wrap" id="banners-wrap"></div>
 
+      <!-- Cadetería Entry -->
+      <section class="cadeteria-entry" id="btn-open-cadeteria" role="button" aria-label="Abrir servicio de cadetería">
+        <div class="cadeteria-entry-icon">📦</div>
+        <div class="cadeteria-entry-text">
+          <h3>Cadetería y Trámites</h3>
+          <p>Envíos, facturas y más</p>
+        </div>
+        <div class="cadeteria-entry-arrow">→</div>
+      </section>
+
       <!-- Grilla de LOCALES -->
       <section class="home-stores-section">
         <div class="home-cats-header">
@@ -112,6 +122,109 @@
         </div>
         <div class="home-stores-grid" id="home-stores-grid"></div>
       </section>
+    </div>
+
+    <!-- ── CADETERIA VIEW ── -->
+    <div id="cadeteria-view" style="display: none">
+      <div class="store-header" style="display: flex">
+        <div class="store-header-inner">
+          <div class="store-header-info">
+            <div class="store-header-name">Cadetería / Trámites 📦</div>
+          </div>
+        </div>
+      </div>
+      <button class="products-back-bar" id="cadeteria-back" aria-label="Volver al inicio"><span>←</span> Volver</button>
+
+      <div class="cadeteria-container">
+        <p class="cadeteria-intro">¿Qué necesitas que hagamos por ti?</p>
+
+        <div class="cadeteria-options">
+          <button class="cad-opt-btn active" data-type="paquete" id="btn-opt-paquete">
+            <span class="cad-opt-icon">🛵</span>
+            <span class="cad-opt-text">Enviar Paquete</span>
+          </button>
+          <button class="cad-opt-btn" data-type="factura" id="btn-opt-factura">
+            <span class="cad-opt-icon">🧾</span>
+            <span class="cad-opt-text">Pagar Factura</span>
+          </button>
+        </div>
+
+        <!-- Formulario Envío de Paquete -->
+        <div class="cad-form" id="form-paquete">
+          <div class="cad-field">
+            <label>¿Qué enviamos?</label>
+            <input type="text" id="cad-paquete-desc" placeholder="Ej: Unas llaves, una caja pequeña..." />
+          </div>
+
+          <div class="cad-field">
+            <label>Punto A (Retiro)</label>
+            <div class="cad-location-group">
+              <button class="cad-loc-btn" id="cad-btn-origen">📍 Usar mi ubicación GPS</button>
+              <span class="cad-loc-hint" id="cad-hint-origen">Obligatorio</span>
+            </div>
+          </div>
+
+          <div class="cad-field">
+            <label>Punto B (Entrega)</label>
+            <div class="cad-location-group">
+              <button class="cad-loc-btn outline" id="cad-btn-destino">🗺️ Marcar destino en el mapa</button>
+              <span class="cad-loc-hint" id="cad-hint-destino">Obligatorio</span>
+            </div>
+          </div>
+
+          <div class="cad-field">
+            <label>WhatsApp Destinatario (Opcional)</label>
+            <input type="tel" id="cad-paquete-phone" placeholder="Ej: 2604 123456" />
+          </div>
+
+          <div class="cad-terms">
+            <label class="cad-checkbox-label">
+              <input type="checkbox" id="cad-paquete-terms" />
+              <span
+                >Declaro que el paquete no contiene sustancias ilícitas, dinero en efectivo o joyas. Acepto que el
+                repartidor entregue el paquete abierto o pueda inspeccionar el contenido por seguridad.</span
+              >
+            </label>
+          </div>
+        </div>
+
+        <!-- Formulario Pago de Factura -->
+        <div class="cad-form" id="form-factura" style="display: none">
+          <div class="cad-field">
+            <label>Monto exacto de la factura</label>
+            <input type="number" id="cad-factura-monto" placeholder="Ej: 15200" />
+            <span class="cad-loc-hint">Este dinero + el envío lo deberás transferir por adelantado.</span>
+          </div>
+          <div class="cad-field">
+            <label>Dirección para llevarte el comprobante</label>
+            <div class="cad-location-group">
+              <button class="cad-loc-btn" id="cad-btn-factura-loc">📍 Usar mi ubicación GPS</button>
+              <span class="cad-loc-hint" id="cad-hint-factura-loc">Obligatorio</span>
+            </div>
+          </div>
+          <div class="cad-terms info">
+            <span>⚠️ Después de confirmar, deberás enviarnos la factura en PDF o foto por WhatsApp.</span>
+          </div>
+        </div>
+
+        <!-- Resumen de Costos -->
+        <div class="cad-summary">
+          <div class="cad-summary-row" id="cad-row-factura" style="display: none">
+            <span>Monto Factura:</span>
+            <strong id="cad-cost-factura">$0</strong>
+          </div>
+          <div class="cad-summary-row">
+            <span>Logística y Viaje <span id="cad-dist-label"></span>:</span>
+            <strong id="cad-cost-envio">$0</strong>
+          </div>
+          <div class="cad-summary-total">
+            <span>Total a transferir:</span>
+            <strong id="cad-cost-total" class="highlight">$0</strong>
+          </div>
+        </div>
+
+        <button class="whatsapp-btn" id="cad-confirm-btn">Confirmar por WhatsApp</button>
+      </div>
     </div>
 
     <!-- ── PRODUCTS VIEW ── -->
@@ -201,6 +314,63 @@
           />
           Continuar con Google
         </button>
+
+        <div style="display: flex; align-items: center; margin: 16px 0; color: var(--text-muted); font-size: 14px">
+          <div style="flex: 1; height: 1px; background: var(--border)"></div>
+          <span style="padding: 0 10px">o con correo</span>
+          <div style="flex: 1; height: 1px; background: var(--border)"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px">
+          <input
+            type="email"
+            id="login-email"
+            placeholder="Correo electrónico"
+            style="
+              padding: 12px;
+              border: 1px solid var(--border);
+              border-radius: var(--radius-sm);
+              font-size: 15px;
+              width: 100%;
+              box-sizing: border-box;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
+          <input
+            type="password"
+            id="login-password"
+            placeholder="Contraseña"
+            style="
+              padding: 12px;
+              border: 1px solid var(--border);
+              border-radius: var(--radius-sm);
+              font-size: 15px;
+              width: 100%;
+              box-sizing: border-box;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
+        </div>
+
+        <div style="display: flex; gap: 10px">
+          <button
+            id="btn-login-email"
+            style="
+              flex: 1;
+              padding: 12px;
+              background: var(--primary);
+              color: white;
+              border: none;
+              border-radius: var(--radius-sm);
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            Ingresar con correo
+          </button>
+        </div>
       </div>
 
       <!-- Sección con login (oculta por defecto) -->
@@ -473,7 +643,7 @@
       </div>
       <div
         id="checkout-summary"
-        style="padding: 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: none"
+        style="padding: 16px; background: var(--surface-2); border-top: 1px solid var(--border); display: none"
       >
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px">
           <span>Subtotal:</span>
@@ -492,7 +662,7 @@
             justify-content: space-between;
             font-size: 18px;
             font-weight: bold;
-            border-top: 1px dashed #cbd5e1;
+            border-top: 1px dashed var(--border);
             padding-top: 8px;
             margin-top: 8px;
           "
@@ -564,6 +734,25 @@
     <!-- ── TOAST ── -->
     <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
+    <!-- ── MAP MODAL ── -->
+    <div class="checkout-sheet" id="cad-map-sheet" style="z-index: 10000">
+      <div class="sheet-handle"></div>
+      <div class="cart-header">
+        <h2>Ubicación de Entrega 📍</h2>
+        <button class="close-btn" id="close-cad-map" aria-label="Cerrar mapa">✕</button>
+      </div>
+      <div class="checkout-body" style="padding: 0; display: flex; flex-direction: column">
+        <div id="cad-map" style="height: 300px; width: 100%; z-index: 1"></div>
+        <div style="padding: 16px">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px">
+            Arrastra el mapa para ubicar el marcador rojo exactamente en el punto de entrega.
+          </p>
+          <button class="whatsapp-btn" id="cad-confirm-map-btn" type="button">Confirmar Destino</button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/js/app.js"></script>
+    <script type="module" src="/js/cadeteria.js"></script>
   </body>
 </html>

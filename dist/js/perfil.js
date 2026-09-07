@@ -17,6 +17,9 @@ const perfilEmail = document.getElementById('perfil-email');
 const pedidosList = document.getElementById('pedidos-activos-list');
 
 const btnLoginGoogle = document.getElementById('btn-login-google');
+const btnLoginEmail = document.getElementById('btn-login-email');
+const inputLoginEmail = document.getElementById('login-email');
+const inputLoginPassword = document.getElementById('login-password');
 const btnLogout = document.getElementById('btn-logout');
 
 let currentUser = null;
@@ -122,6 +125,30 @@ if (btnLoginGoogle) {
       alert('Error al conectar con Google. Intentá de nuevo.');
       btnLoginGoogle.innerHTML =
         '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;" /> Continuar con Google';
+    }
+  });
+}
+
+if (btnLoginEmail) {
+  btnLoginEmail.addEventListener('click', async () => {
+    const email = inputLoginEmail.value.trim();
+    const password = inputLoginPassword.value.trim();
+    if (!email || !password) return showToast('⚠️ Ingresá correo y contraseña');
+
+    try {
+      btnLoginEmail.textContent = '⏳...';
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      inputLoginEmail.value = '';
+      inputLoginPassword.value = '';
+      checkSession();
+      showToast('¡Bienvenido!');
+    } catch (error) {
+      console.error('Error Email Login:', error.message);
+      alert('Error al iniciar sesión. Verificá tus datos.');
+    } finally {
+      btnLoginEmail.textContent = 'Ingresar';
     }
   });
 }

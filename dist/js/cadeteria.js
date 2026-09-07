@@ -1,0 +1,360 @@
+/* global L, ENVIO_CONFIG */
+import { supabase } from './api.js';
+import { calculateDistance } from './checkout.js';
+import { fmt, showToast } from './utils.js';
+
+// DOM Elements - Views & Entry
+const homeView = document.getElementById('home-view');
+const cadeteriaView = document.getElementById('cadeteria-view');
+const btnOpenCadeteria = document.getElementById('btn-open-cadeteria');
+const btnBack = document.getElementById('cadeteria-back');
+
+// DOM Elements - Forms
+const btnOptPaquete = document.getElementById('btn-opt-paquete');
+const btnOptFactura = document.getElementById('btn-opt-factura');
+const formPaquete = document.getElementById('form-paquete');
+const formFactura = document.getElementById('form-factura');
+
+// Cost Summary Elements
+const cadRowFactura = document.getElementById('cad-row-factura');
+const cadCostFactura = document.getElementById('cad-cost-factura');
+const cadDistLabel = document.getElementById('cad-dist-label');
+const cadCostEnvio = document.getElementById('cad-cost-envio');
+const cadCostTotal = document.getElementById('cad-cost-total');
+
+// Botones y Mapas
+const btnOrigen = document.getElementById('cad-btn-origen');
+const hintOrigen = document.getElementById('cad-hint-origen');
+const btnDestino = document.getElementById('cad-btn-destino');
+const hintDestino = document.getElementById('cad-hint-destino');
+const btnFacturaLoc = document.getElementById('cad-btn-factura-loc');
+const hintFacturaLoc = document.getElementById('cad-hint-factura-loc');
+
+const mapSheet = document.getElementById('cad-map-sheet');
+const btnCloseMap = document.getElementById('close-cad-map');
+const btnConfirmMap = document.getElementById('cad-confirm-map-btn');
+
+// Botón de confirmar
+const btnConfirm = document.getElementById('cad-confirm-btn');
+
+// State
+let currentType = 'paquete'; // 'paquete' o 'factura'
+let coordsOrigen = null;
+let coordsDestino = null;
+let coordsFactura = null; // Para cuando se pide pagar factura
+let mapInstance = null;
+const COSTO_ESPERA_FACTURA = 4000;
+const COMISION_FACTURA = 1000; // Lo que gana la app por gestión
+
+// ── NAVEGACIÓN ──────────────────────────────────────────────
+btnOpenCadeteria?.addEventListener('click', async () => {
+  // Verificamos si está logueado
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) {
+    showToast('⚠️ Debes iniciar sesión (Perfil) para usar Cadetería');
+    return;
+  }
+
+  homeView.style.display = 'none';
+  cadeteriaView.style.display = 'block';
+  window.scrollTo(0, 0);
+  updateCostSummary();
+});
+
+btnBack?.addEventListener('click', () => {
+  cadeteriaView.style.display = 'none';
+  homeView.style.display = 'block';
+});
+
+// ── CAMBIO DE TIPO DE SERVICIO ──────────────────────────────
+function setType(type) {
+  currentType = type;
+  if (type === 'paquete') {
+    btnOptPaquete.classList.add('active');
+    btnOptFactura.classList.remove('active');
+    formPaquete.style.display = 'flex';
+    formFactura.style.display = 'none';
+  } else {
+    btnOptFactura.classList.add('active');
+    btnOptPaquete.classList.remove('active');
+    formFactura.style.display = 'flex';
+    formPaquete.style.display = 'none';
+  }
+  updateCostSummary();
+}
+
+btnOptPaquete?.addEventListener('click', () => setType('paquete'));
+btnOptFactura?.addEventListener('click', () => setType('factura'));
+
+// Recalcular cuando cambia el monto de la factura
+document.getElementById('cad-factura-monto')?.addEventListener('input', updateCostSummary);
+
+// ── OBTENER GPS DE ORIGEN ──────────────────────────────────
+function handleGetLocation(btn, hint, onCoordsSuccess) {
+  if (!navigator.geolocation) {
+    hint.textContent = 'GPS no disponible';
+    return;
+  }
+
+  btn.classList.add('loading');
+  hint.textContent = 'Obteniendo...';
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      btn.classList.remove('loading');
+      btn.classList.add('success');
+      btn.innerHTML = '✅ Ubicación obtenida';
+      hint.textContent = `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+      onCoordsSuccess(coords);
+    },
+    () => {
+      btn.classList.remove('loading');
+      hint.textContent = 'Permiso denegado. Activa tu GPS.';
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+btnOrigen?.addEventListener('click', () => {
+  handleGetLocation(btnOrigen, hintOrigen, (coords) => {
+    coordsOrigen = coords;
+    updateCostSummary();
+  });
+});
+
+btnFacturaLoc?.addEventListener('click', () => {
+  handleGetLocation(btnFacturaLoc, hintFacturaLoc, (coords) => {
+    coordsFactura = coords;
+    updateCostSummary();
+  });
+});
+
+// ── OBTENER GPS DE DESTINO (MAPA INTERACTIVO) ───────────────
+function initMap() {
+  if (mapInstance) return;
+  // Centro por defecto en Malargüe
+  const centerLat = -35.4752;
+  const centerLng = -69.5855;
+
+  mapInstance = L.map('cad-map').setView([centerLat, centerLng], 14);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+  }).addTo(mapInstance);
+
+  // Agregar marcador estático en el centro simulado por CSS
+  const centerMarker = document.createElement('div');
+  centerMarker.className = 'center-marker';
+  centerMarker.innerHTML = '📍';
+  document.getElementById('cad-map').appendChild(centerMarker);
+}
+
+btnDestino?.addEventListener('click', () => {
+  mapSheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Necesitamos un pequeño timeout para que Leaflet renderice bien cuando el modal se abre
+  setTimeout(() => {
+    initMap();
+    mapInstance.invalidateSize();
+    // Si ya teníamos origen, centramos ahí
+    if (coordsOrigen) {
+      mapInstance.setView([coordsOrigen.lat, coordsOrigen.lng], 15);
+    }
+  }, 300);
+});
+
+btnCloseMap?.addEventListener('click', () => {
+  mapSheet.classList.remove('open');
+  document.body.style.overflow = '';
+});
+
+btnConfirmMap?.addEventListener('click', () => {
+  const center = mapInstance.getCenter();
+  coordsDestino = { lat: center.lat, lng: center.lng };
+
+  btnDestino.classList.remove('outline');
+  btnDestino.classList.add('success');
+  btnDestino.innerHTML = '✅ Destino marcado en mapa';
+  hintDestino.textContent = `${coordsDestino.lat.toFixed(5)}, ${coordsDestino.lng.toFixed(5)}`;
+
+  mapSheet.classList.remove('open');
+  document.body.style.overflow = '';
+
+  updateCostSummary();
+});
+
+// ── CÁLCULO DE COSTOS ───────────────────────────────────────
+function getEnvioConfig() {
+  return typeof ENVIO_CONFIG !== 'undefined'
+    ? ENVIO_CONFIG
+    : { base: 1500, distanciaBase: 1.5, extraPorKm: 500, maximo: 4000 };
+}
+
+function calcularCostoDistancia(dist) {
+  const cfg = getEnvioConfig();
+  let costo = cfg.base;
+  if (dist > cfg.distanciaBase) {
+    const extraKm = dist - cfg.distanciaBase;
+    costo += extraKm * cfg.extraPorKm;
+  }
+  if (costo > cfg.maximo) costo = cfg.maximo;
+  return Math.round(costo / 100) * 100;
+}
+
+function updateCostSummary() {
+  if (currentType === 'paquete') {
+    cadRowFactura.style.display = 'none';
+
+    if (coordsOrigen && coordsDestino) {
+      const dist = calculateDistance(
+        coordsOrigen.lat,
+        coordsOrigen.lng,
+        coordsDestino.lat,
+        coordsDestino.lng
+      );
+      const costo = calcularCostoDistancia(dist);
+      cadDistLabel.textContent = `(${dist.toFixed(1)} km)`;
+      cadCostEnvio.textContent = `$${fmt(costo)}`;
+      cadCostTotal.textContent = `$${fmt(costo)}`;
+    } else {
+      cadDistLabel.textContent = '';
+      cadCostEnvio.textContent = 'A calcular';
+      cadCostTotal.textContent = '$0';
+    }
+  } else if (currentType === 'factura') {
+    cadRowFactura.style.display = 'flex';
+
+    const montoFactura = parseFloat(document.getElementById('cad-factura-monto').value) || 0;
+    cadCostFactura.textContent = `$${fmt(montoFactura)}`;
+
+    // El costo de factura es: Costo de espera (4000) + Comisión app (1000) + Costo de viaje (desde local hasta cliente)
+    // Asumimos que el local (origen) está en Malargüe centro.
+    let costoLogistica = COSTO_ESPERA_FACTURA + COMISION_FACTURA;
+
+    if (coordsFactura) {
+      // Coordenadas aproximadas del centro de Malargüe (Local)
+      const dist = calculateDistance(-35.4752, -69.5855, coordsFactura.lat, coordsFactura.lng);
+      const costoViaje = calcularCostoDistancia(dist);
+      costoLogistica += costoViaje;
+      cadDistLabel.textContent = `(Espera + ${dist.toFixed(1)} km)`;
+    } else {
+      costoLogistica += getEnvioConfig().base; // Valor por defecto
+      cadDistLabel.textContent = `(Espera + Base)`;
+    }
+
+    cadCostEnvio.textContent = `$${fmt(costoLogistica)}`;
+    cadCostTotal.textContent = `$${fmt(montoFactura + costoLogistica)}`;
+  }
+}
+
+// ── GUARDAR Y CONFIRMAR ────────────────────────────────────
+btnConfirm?.addEventListener('click', async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const userName = session?.user?.user_metadata?.nombre || 'Usuario';
+  const waNum = typeof WHATSAPP_NUM !== 'undefined' ? WHATSAPP_NUM : '5492604055198';
+
+  let msg = '';
+
+  if (currentType === 'paquete') {
+    const desc = document.getElementById('cad-paquete-desc').value.trim();
+    const phone = document.getElementById('cad-paquete-phone').value.trim();
+    const terms = document.getElementById('cad-paquete-terms').checked;
+
+    if (!desc) return showToast('⚠️ Ingresa qué contiene el paquete.');
+    if (!coordsOrigen || !coordsDestino)
+      return showToast('⚠️ Faltan ubicaciones (Punto A y Punto B).');
+    if (!terms) return showToast('⚠️ Debes aceptar los términos de seguridad del paquete.');
+
+    const dist = calculateDistance(
+      coordsOrigen.lat,
+      coordsOrigen.lng,
+      coordsDestino.lat,
+      coordsDestino.lng
+    );
+    const costo = calcularCostoDistancia(dist);
+
+    msg =
+      `📦 *ENVÍO DE PAQUETE*\n` +
+      `👤 *Cliente:* ${userName}\n` +
+      `ℹ️ *Contiene:* ${desc}\n` +
+      (phone ? `📞 *Destinatario:* ${phone}\n` : '') +
+      `\n📍 *PUNTO A (RETIRO):* https://maps.google.com/?q=${coordsOrigen.lat},${coordsOrigen.lng}\n` +
+      `🏁 *PUNTO B (ENTREGA):* https://maps.google.com/?q=${coordsDestino.lat},${coordsDestino.lng}\n` +
+      `\n💰 *Total del viaje:* $${fmt(costo)}`;
+
+    // Guardar en base de datos
+    await supabase.from('pedidos').insert({
+      cliente_id: session.user.id,
+      cliente_nombre: userName,
+      cliente_tel: phone,
+      gps_lat: coordsDestino.lat,
+      gps_lng: coordsDestino.lng,
+      monto_productos: 0,
+      monto_envio: costo,
+      monto_total: costo,
+      metodo_pago: 'efectivo',
+      estado: 'pendiente',
+      items: [
+        {
+          tipo: 'cadeteria_paquete',
+          descripcion: desc,
+          origen: coordsOrigen,
+          destino: coordsDestino,
+        },
+      ],
+    });
+  } else if (currentType === 'factura') {
+    const monto = parseFloat(document.getElementById('cad-factura-monto').value);
+
+    if (!monto || isNaN(monto) || monto <= 0)
+      return showToast('⚠️ Ingresa un monto de factura válido.');
+    if (!coordsFactura) return showToast('⚠️ Debes compartir tu ubicación GPS.');
+
+    const dist = calculateDistance(-35.4752, -69.5855, coordsFactura.lat, coordsFactura.lng);
+    const costoViaje = calcularCostoDistancia(dist);
+    const costoLogistica = COSTO_ESPERA_FACTURA + COMISION_FACTURA + costoViaje;
+    const total = monto + costoLogistica;
+
+    msg =
+      `🧾 *PAGO DE FACTURA*\n` +
+      `👤 *Cliente:* ${userName}\n` +
+      `\n💵 *Monto de Factura:* $${fmt(monto)}\n` +
+      `🛵 *Costo Logística (Espera + Viaje):* $${fmt(costoLogistica)}\n` +
+      `✅ *Total a Transferir:* $${fmt(total)}\n` +
+      `\n📍 *Entregar comprobante en:* https://maps.google.com/?q=${coordsFactura.lat},${coordsFactura.lng}\n` +
+      `\n⚠️ *Te envío la boleta en el siguiente mensaje.*`;
+
+    // Guardar en base de datos
+    await supabase.from('pedidos').insert({
+      cliente_id: session.user.id,
+      cliente_nombre: userName,
+      gps_lat: coordsFactura.lat,
+      gps_lng: coordsFactura.lng,
+      monto_productos: monto, // Guardamos la factura como producto
+      monto_envio: costoLogistica,
+      monto_total: total,
+      metodo_pago: 'transferencia', // Obligatorio transferencia
+      estado: 'pendiente',
+      items: [
+        {
+          tipo: 'cadeteria_factura',
+          descripcion: `Pago factura por $${fmt(monto)}`,
+          destino: coordsFactura,
+        },
+      ],
+    });
+  }
+
+  // Enviar a WhatsApp
+  const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank', 'noopener,noreferrer');
+
+  // Limpiar y volver
+  cadeteriaView.style.display = 'none';
+  homeView.style.display = 'block';
+  showToast('¡Solicitud iniciada! Continúa por WhatsApp.');
+});

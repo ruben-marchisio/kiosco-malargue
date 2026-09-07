@@ -179,6 +179,25 @@ async function handleCreateUser(request, env) {
     });
   }
 
+  // 4. Si es moto, crear registro en repartidores
+  if (rol === 'moto' && body.titular_nombre) {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/repartidores`, {
+      method: 'POST',
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        nombre: body.titular_nombre.trim(),
+        vehiculo: body.vehiculo || 'Moto',
+        activo: true,
+      }),
+    });
+  }
+
   return json({ success: true, user_id: userId });
 }
 

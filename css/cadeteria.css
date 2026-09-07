@@ -1,0 +1,242 @@
+/* =============================================
+   Módulo de Cadetería
+   ============================================= */
+
+/* Botón de entrada en Home */
+.cadeteria-entry {
+  margin: 0 16px 24px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.cadeteria-entry:active {
+  transform: scale(0.98);
+}
+.cadeteria-entry-icon {
+  font-size: 32px;
+}
+.cadeteria-entry-text {
+  flex: 1;
+}
+.cadeteria-entry-text h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.cadeteria-entry-text p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+.cadeteria-entry-arrow {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Contenedor principal */
+.cadeteria-container {
+  padding: 16px;
+  padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 24px);
+  animation: fadeIn var(--t);
+}
+
+.cadeteria-intro {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--text);
+  text-align: center;
+}
+
+/* Tabs de opciones */
+.cadeteria-options {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.cad-opt-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+.cad-opt-btn.active {
+  border-color: var(--primary);
+  background: rgba(255, 107, 53, 0.1);
+}
+.cad-opt-icon {
+  font-size: 28px;
+}
+.cad-opt-text {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Formularios */
+.cad-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.cad-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cad-field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cad-field input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+}
+.cad-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+/* Botones de Ubicación */
+.cad-location-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cad-loc-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.cad-loc-btn.outline {
+  border-style: dashed;
+  border-color: var(--primary);
+  color: var(--primary);
+  background: transparent;
+}
+.cad-loc-btn.success {
+  background: rgba(37, 211, 102, 0.1);
+  border-color: var(--whatsapp);
+  color: var(--whatsapp-dark);
+}
+.cad-loc-btn.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+.cad-loc-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Checkboxes & Legal */
+.cad-terms {
+  background: var(--surface-2);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.cad-terms.info {
+  background: rgba(255, 209, 102, 0.15);
+  border-color: rgba(255, 209, 102, 0.3);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.cad-checkbox-label {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.cad-checkbox-label input {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+/* Resumen de costos */
+.cad-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.cad-summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.cad-summary-row strong {
+  color: var(--text);
+}
+.cad-summary-total {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text);
+}
+.cad-summary-total .highlight {
+  color: var(--primary);
+}
+
+/* Mapa Fijo (Punto en el centro) */
+.leaflet-container {
+  font-family: inherit;
+}
+.center-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  font-size: 32px;
+  z-index: 1000; /* Sobre el mapa pero debajo de popups */
+  pointer-events: none; /* Dejar pasar los clicks al mapa */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
