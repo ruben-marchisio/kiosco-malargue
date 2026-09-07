@@ -432,7 +432,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
-  background: white;
+  background: var(--surface);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;

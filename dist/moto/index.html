@@ -107,23 +107,32 @@
         <section class="tab-panel" id="tab-hoy">
           <div class="hoy-section">
             <p class="hoy-title">📊 Resumen de hoy</p>
-            <div style="display: flex; gap: 12px; margin-bottom: 16px">
-              <div class="hoy-card" style="flex: 1">
-                <div>
-                  <div class="hoy-num" id="hoy-viajes">0</div>
-                  <div class="hoy-label">Viajes</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px">
+              <div style="display: flex; gap: 12px">
+                <div class="hoy-card" style="flex: 1">
+                  <div>
+                    <div class="hoy-num" id="hoy-viajes">0</div>
+                    <div class="hoy-label">Viajes</div>
+                  </div>
+                  <span style="font-size: 32px">🏍️</span>
                 </div>
-                <span style="font-size: 32px">🏍️</span>
+                <div class="hoy-card" style="flex: 1">
+                  <div>
+                    <div class="hoy-num" id="hoy-ingresos">$0</div>
+                    <div class="hoy-label">Total del día</div>
+                  </div>
+                  <span style="font-size: 32px">💰</span>
+                </div>
               </div>
-              <div class="hoy-card" style="flex: 1">
+              <div class="hoy-card" style="border: 1px solid var(--primary); background: #fffcf9">
                 <div>
-                  <div class="hoy-num" id="hoy-ingresos">$0</div>
-                  <div class="hoy-label">En envíos</div>
+                  <div class="hoy-num" id="hoy-pendiente" style="color: var(--primary)">$0</div>
+                  <div class="hoy-label">Saldo pendiente a cobrar al local</div>
                 </div>
-                <span style="font-size: 32px">💰</span>
+                <span style="font-size: 32px">⏳</span>
               </div>
             </div>
-            <p class="hoy-title">Viajes completados</p>
+            <p class="hoy-title">Detalle de viajes completados</p>
             <div id="hoy-list">
               <div class="state-empty" style="padding: 32px 20px">
                 <p>Aún no completaste viajes hoy</p>

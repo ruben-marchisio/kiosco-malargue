@@ -391,7 +391,9 @@ async function loadHoy() {
   const hoy = new Date().toISOString().split('T')[0];
   const { data } = await supabase
     .from('pedidos')
-    .select('id, monto_envio, monto_total, cliente_nombre, created_at, updated_at')
+    .select(
+      'id, monto_envio, monto_total, cliente_nombre, created_at, updated_at, liquidacion_moto_id'
+    )
     .eq('estado', 'entregado')
     .eq('repartidor_id', myUserId)
     .gte('updated_at', hoy)
@@ -399,10 +401,28 @@ async function loadHoy() {
 
   const total = data?.length || 0;
   const totalEnvios = data?.reduce((s, p) => s + Number(p.monto_envio), 0) || 0;
+  const pendienteCobro =
+    data?.filter((p) => !p.liquidacion_moto_id).reduce((s, p) => s + Number(p.monto_envio), 0) || 0;
 
   document.getElementById('hoy-viajes').textContent = total;
   document.getElementById('trip-count').textContent = total;
   document.getElementById('hoy-ingresos').textContent = `$${fmt(totalEnvios)}`;
+
+  const elPendiente = document.getElementById('hoy-pendiente');
+  if (elPendiente) {
+    elPendiente.textContent = `$${fmt(pendienteCobro)}`;
+    if (pendienteCobro === 0) {
+      elPendiente.parentElement.parentElement.style.opacity = '0.5';
+      elPendiente.parentElement.parentElement.style.background = '#f9fafb';
+      elPendiente.parentElement.parentElement.style.borderColor = '#e5e7eb';
+      elPendiente.style.color = 'var(--text-muted)';
+    } else {
+      elPendiente.parentElement.parentElement.style.opacity = '1';
+      elPendiente.parentElement.parentElement.style.background = '#fffcf9';
+      elPendiente.parentElement.parentElement.style.borderColor = 'var(--primary)';
+      elPendiente.style.color = 'var(--primary)';
+    }
+  }
 
   const list = document.getElementById('hoy-list');
   if (!total) {
@@ -420,7 +440,7 @@ async function loadHoy() {
       </div>
       <div style="text-align:right">
         <div style="font-weight:700;color:var(--green)">$${fmt(p.monto_envio)}</div>
-        <div class="hoy-label">envío</div>
+        <div class="hoy-label">${p.liquidacion_moto_id ? '✅ Pagado' : '⏳ Pendiente'}</div>
       </div>
     </div>`
     )

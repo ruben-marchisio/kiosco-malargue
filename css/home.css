@@ -422,9 +422,9 @@
   gap: 16px;
   width: 100%;
   padding: 18px;
-  background: white;
+  background: var(--surface);
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
   text-align: left;
   cursor: pointer;
