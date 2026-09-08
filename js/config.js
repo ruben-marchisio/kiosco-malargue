@@ -8,10 +8,10 @@ const SUPABASE_ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sbmZrZHJkc3NhYXlubHJuZnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NjMyNTQsImV4cCI6MjEwMTUzOTI1NH0.YFZHdP6L0oxihoVsqqCDASK85hFM7RmdqOlP9xKD-GU';
 const WHATSAPP_NUM = '5492604055198'; // El Pechito — Malargüe
 const ENVIO_CONFIG = {
-  base: 1500, // Precio para la distancia mínima
-  distanciaBase: 1.5, // Hasta 1.5 km se cobra la base
-  extraPorKm: 200, // Costo extra por cada km adicional
-  maximo: 4000, // Tope máximo del envío
+  base: 1500, // Precio para la distancia mínima (hasta 1,5 km)
+  distanciaBase: 1.5, // Km cubiertos por la tarifa base
+  extraPorKm: 250, // Costo extra por cada km adicional
+  maximo: 4500, // Tope máximo del envío
 };
 const ADMIN_EMAIL = 'rubenmarchisio@gmail.com'; // Admin principal
 

@@ -87,14 +87,30 @@ async function loadWebPedidos() {
 function renderWebPedidoCard(p) {
   const st = ESTADOS[p.estado] || ESTADOS.pendiente;
 
-  // Genera lista visual de items
+  // Genera lista visual de items (con soporte para cadetería)
   const itemsHtml =
     Array.isArray(p.items) && p.items.length
       ? p.items
-          .map(
-            (i) =>
-              `<span class="pw-item-row"><span class="pw-item-qty">${i.qty || 1}×</span> ${i.nombre || '?'}${i.precio !== null && i.precio !== undefined ? ` <span class="pw-item-price">$${fmt(i.precio)}</span>` : ''}</span>`
-          )
+          .map((i) => {
+            if (i.tipo === 'cadeteria_paquete') {
+              return `<span class="pw-item-row">
+                <span class="pw-item-qty">📦</span>
+                <span><strong>Cadetería — Paquete</strong>: ${i.descripcion || '—'}</span>
+              </span>
+              ${i.destinatario ? `<span class="pw-item-row"><span class="pw-item-qty">👥</span> <span>Destinatario: <strong>${i.destinatario}</strong>${i.telefono_destinatario ? ` · 📞 ${i.telefono_destinatario}` : ''}</span></span>` : ''}
+              ${i.origen ? `<span class="pw-item-row"><span class="pw-item-qty">📍</span> <a href="https://maps.google.com/?q=${i.origen.lat},${i.origen.lng}" target="_blank" rel="noopener" style="color:var(--primary)">Ver Punto A (retiro)</a></span>` : ''}
+              ${i.destino ? `<span class="pw-item-row"><span class="pw-item-qty">🏁</span> <a href="https://maps.google.com/?q=${i.destino.lat},${i.destino.lng}" target="_blank" rel="noopener" style="color:var(--primary)">Ver Punto B (entrega)</a></span>` : ''}`;
+            }
+            if (i.tipo === 'cadeteria_factura') {
+              return `<span class="pw-item-row">
+                <span class="pw-item-qty">🧾</span>
+                <span><strong>Cadetería — Pago de Factura</strong>: ${i.descripcion || '—'}</span>
+              </span>
+              ${i.destino ? `<span class="pw-item-row"><span class="pw-item-qty">📍</span> <a href="https://maps.google.com/?q=${i.destino.lat},${i.destino.lng}" target="_blank" rel="noopener" style="color:var(--primary)">Ver ubicación cliente</a></span>` : ''}`;
+            }
+            // Producto normal
+            return `<span class="pw-item-row"><span class="pw-item-qty">${i.qty || 1}×</span> ${i.nombre || '?'}${i.precio !== null && i.precio !== undefined ? ` <span class="pw-item-price">$${fmt(i.precio)}</span>` : ''}</span>`;
+          })
           .join('')
       : '<span style="color:var(--muted)">—</span>';
 

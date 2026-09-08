@@ -212,6 +212,49 @@
             <input type="tel" id="cad-paquete-phone" placeholder="Ej: 2604 123456" />
           </div>
 
+          <div class="cad-field" style="margin-top: 8px">
+            <label>💳 Método de pago</label>
+            <div class="pago-options" style="margin-top: 6px">
+              <label class="pago-option" for="cad-pago-efectivo">
+                <input type="radio" id="cad-pago-efectivo" name="cad-pago" value="efectivo" checked />
+                <span class="pago-card">
+                  <span class="pago-icon">💵</span>
+                  <span class="pago-text">Efectivo</span>
+                </span>
+              </label>
+              <label class="pago-option" for="cad-pago-transferencia">
+                <input type="radio" id="cad-pago-transferencia" name="cad-pago" value="transferencia" />
+                <span class="pago-card">
+                  <span class="pago-icon">💳</span>
+                  <span class="pago-text">Transferencia</span>
+                </span>
+              </label>
+            </div>
+            <!-- Monto en efectivo: visible solo si eligieron efectivo -->
+            <div id="cad-efectivo-wrap" style="margin-top: 10px">
+              <label style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block">
+                💸 ¿Con cuánto vas a pagar? <span style="font-size: 11px">(para que la moto lleve vuelto)</span>
+              </label>
+              <input
+                type="number"
+                id="cad-efectivo-monto"
+                placeholder="Ej: 5000"
+                min="0"
+                step="100"
+                style="
+                  width: 100%;
+                  padding: 10px 12px;
+                  border: 1.5px solid var(--border);
+                  border-radius: var(--radius-sm);
+                  font-size: 15px;
+                  box-sizing: border-box;
+                  background: var(--surface);
+                  color: var(--text);
+                "
+              />
+            </div>
+          </div>
+
           <div class="cad-terms">
             <label class="cad-checkbox-label">
               <input type="checkbox" id="cad-paquete-terms" />
@@ -729,6 +772,29 @@
                 <span class="pago-text">Transferencia</span>
               </span>
             </label>
+          </div>
+          <!-- Campo monto efectivo: solo visible cuando se elige efectivo -->
+          <div id="checkout-efectivo-wrap" style="margin-top: 12px">
+            <label style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block">
+              💸 ¿Con cuánto vas a pagar? <span style="font-size: 11px">(para que la moto lleve vuelto)</span>
+            </label>
+            <input
+              type="number"
+              id="checkout-efectivo-monto"
+              placeholder="Ej: 5000"
+              min="0"
+              step="100"
+              style="
+                width: 100%;
+                padding: 10px 12px;
+                border: 1.5px solid var(--border);
+                border-radius: var(--radius-sm);
+                font-size: 15px;
+                box-sizing: border-box;
+                background: var(--surface);
+                color: var(--text);
+              "
+            />
           </div>
         </div>
       </div>

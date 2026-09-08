@@ -72,6 +72,18 @@ btnOpenCadeteria?.addEventListener('click', async () => {
     const nombre = meta.nombre || meta.full_name || meta.name || '';
     if (nombre) remitenteInput.value = nombre;
   }
+
+  // Toggle campo monto en efectivo
+  function toggleCadEfectivo() {
+    const isEfectivo =
+      document.querySelector('input[name="cad-pago"]:checked')?.value === 'efectivo';
+    const wrap = document.getElementById('cad-efectivo-wrap');
+    if (wrap) wrap.style.display = isEfectivo ? 'block' : 'none';
+  }
+  toggleCadEfectivo();
+  document
+    .querySelectorAll('input[name="cad-pago"]')
+    .forEach((r) => r.addEventListener('change', toggleCadEfectivo));
 });
 
 btnBack?.addEventListener('click', () => {
@@ -349,6 +361,11 @@ btnConfirm?.addEventListener('click', async () => {
     const destinatario = document.getElementById('cad-paquete-destinatario').value.trim();
     const phone = document.getElementById('cad-paquete-phone').value.trim();
     const terms = document.getElementById('cad-paquete-terms').checked;
+    const cadPago = document.querySelector('input[name="cad-pago"]:checked')?.value || 'efectivo';
+    const cadMontoEfectivo =
+      cadPago === 'efectivo'
+        ? parseFloat(document.getElementById('cad-efectivo-monto')?.value || '0') || null
+        : null;
 
     if (!desc) return showToast('⚠️ Ingresa qué contiene el paquete.');
     if (!destinatario) return showToast('⚠️ Ingresá el nombre del destinatario.');
@@ -364,6 +381,14 @@ btnConfirm?.addEventListener('click', async () => {
     );
     const costo = calcularCostoDistancia(dist);
 
+    const cadPagoEmoji = cadPago === 'transferencia' ? '💳' : '💵';
+    const cadPagoLabel = cadPago === 'transferencia' ? 'Transferencia' : 'Efectivo';
+    let cadPagoStr = cadPagoLabel;
+    if (cadPago === 'efectivo' && cadMontoEfectivo) {
+      const vuelto = cadMontoEfectivo - costo;
+      cadPagoStr = `Efectivo · Paga con $${fmt(cadMontoEfectivo)}${vuelto > 0 ? ` · Vuelto: $${fmt(vuelto)}` : ''}`;
+    }
+
     msg =
       `📦 *ENVÍO DE PAQUETE*\n` +
       `👤 *Cliente:* ${userName}\n` +
@@ -372,10 +397,12 @@ btnConfirm?.addEventListener('click', async () => {
       (phone ? `📞 *Tel. Destinatario:* ${phone}\n` : '') +
       `\n📍 *PUNTO A (RETIRO):* https://maps.google.com/?q=${coordsOrigen.lat},${coordsOrigen.lng}\n` +
       `🏁 *PUNTO B (ENTREGA):* https://maps.google.com/?q=${coordsDestino.lat},${coordsDestino.lng}\n` +
-      `\n💰 *Total del viaje:* $${fmt(costo)}`;
+      `\n${cadPagoEmoji} *Pago:* ${cadPagoStr}\n` +
+      `💰 *Total del viaje:* $${fmt(costo)}`;
 
     // Guardar en base de datos
     await supabase.from('pedidos').insert({
+      comercio_id: typeof CADETERIA_LOCAL_ID !== 'undefined' ? CADETERIA_LOCAL_ID : null,
       cliente_id: session.user.id,
       cliente_nombre: userName,
       cliente_tel: phone || null,
@@ -384,7 +411,7 @@ btnConfirm?.addEventListener('click', async () => {
       monto_productos: 0,
       monto_envio: costo,
       monto_total: costo,
-      metodo_pago: 'efectivo',
+      metodo_pago: cadPago,
       estado: 'pendiente',
       items: [
         {
@@ -392,6 +419,7 @@ btnConfirm?.addEventListener('click', async () => {
           descripcion: desc,
           destinatario: destinatario,
           telefono_destinatario: phone || null,
+          monto_efectivo: cadMontoEfectivo,
           origen: coordsOrigen,
           destino: coordsDestino,
         },
@@ -424,6 +452,7 @@ btnConfirm?.addEventListener('click', async () => {
 
     // Guardar en base de datos
     await supabase.from('pedidos').insert({
+      comercio_id: typeof CADETERIA_LOCAL_ID !== 'undefined' ? CADETERIA_LOCAL_ID : null,
       cliente_id: session.user.id,
       cliente_nombre: userName,
       gps_lat: coordsFactura.lat,

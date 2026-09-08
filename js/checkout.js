@@ -193,6 +193,16 @@ export function openCheckout() {
   const savedPago = localStorage.getItem('kiosco_pago') || 'efectivo';
   const pagoRadio = document.querySelector(`input[name="pago"][value="${savedPago}"]`);
   if (pagoRadio) pagoRadio.checked = true;
+  // Mostrar/ocultar campo de monto en efectivo según método
+  const efectivoWrap = document.getElementById('checkout-efectivo-wrap');
+  function toggleEfectivoWrap() {
+    const isEfectivo = document.querySelector('input[name="pago"]:checked')?.value === 'efectivo';
+    if (efectivoWrap) efectivoWrap.style.display = isEfectivo ? 'block' : 'none';
+  }
+  toggleEfectivoWrap();
+  document
+    .querySelectorAll('input[name="pago"]')
+    .forEach((r) => r.addEventListener('change', toggleEfectivoWrap));
 
   // — Mostrar aviso si el local está cerrado
   const banner = document.getElementById('checkout-closed-banner');
@@ -239,6 +249,12 @@ async function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, 
 
   const pagoEmoji = pago === 'transferencia' ? '💳' : '💵';
   const pagoLabel = pago === 'transferencia' ? 'Transferencia' : 'Efectivo';
+  const montoEfectivo = arguments[8]; // opcional
+  let pagoStr = pagoLabel;
+  if (pago === 'efectivo' && montoEfectivo) {
+    const vuelto = montoEfectivo - total;
+    pagoStr = `Efectivo · Paga con $${fmt(montoEfectivo)}${vuelto > 0 ? ` · Vuelto: $${fmt(vuelto)}` : ''}`;
+  }
 
   let msg =
     `🛒 *Pedido — Kiosco Digital El Pechito*\n` +
@@ -262,7 +278,7 @@ async function buildWhatsApp(subtotal, envio, total, nombre, direccion, calles, 
     msg += `📍 *Ubicación GPS:* https://maps.google.com/?q=${coords.lat},${coords.lng}\n`;
   }
 
-  msg += `${pagoEmoji} *Pago:* ${pagoLabel}\n`;
+  msg += `${pagoEmoji} *Pago:* ${pagoStr}\n`;
 
   // Número de WhatsApp: el del comercio seleccionado, o el asociado al carrito, o el default de config.js
   let waNum = selectedStore?.whatsapp;
@@ -408,6 +424,10 @@ async function submitOrder() {
       : typeof ENVIO_CONFIG !== 'undefined'
         ? ENVIO_CONFIG.base
         : 3000;
+  const total = subtotal + envio;
+  const montoEfectivoInput = document.getElementById('checkout-efectivo-monto');
+  const montoEfectivo =
+    pago === 'efectivo' ? parseFloat(montoEfectivoInput?.value || '0') || null : null;
 
   // Guardar en BD (se espera a que termine para que el navegador móvil no cancele la petición al cambiar a WhatsApp)
   await savePedidoToDB({ nombre, direccion, calles, pago, coords: gpsCoords, subtotal, envio });
@@ -416,12 +436,13 @@ async function submitOrder() {
   const waUrl = await buildWhatsApp(
     subtotal,
     envio,
-    subtotal + envio,
+    total,
     nombre,
     direccion,
     calles,
     pago,
-    gpsCoords
+    gpsCoords,
+    montoEfectivo
   );
   window.open(waUrl, '_blank', 'noopener,noreferrer');
 
