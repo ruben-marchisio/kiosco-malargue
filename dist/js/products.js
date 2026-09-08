@@ -89,7 +89,8 @@ function updateEnvioBanner() {
   if (!loc) {
     // Sin ubicación guardada
     banner.style.display = 'block';
-    bannerText.innerHTML = '📍 <span style="color:var(--text-muted)">Guardá tu ubicación en Mi Perfil para ver el costo de envío</span>';
+    bannerText.innerHTML =
+      '📍 <span style="color:var(--text-muted)">Guardá tu ubicación en Mi Perfil para ver el costo de envío</span>';
     banner.onclick = () => document.getElementById('nav-perfil')?.click();
     return;
   }
@@ -97,9 +98,10 @@ function updateEnvioBanner() {
   if (store?.coords_lat && store?.coords_lng) {
     const dist = calculateDistance(loc.lat, loc.lng, store.coords_lat, store.coords_lng);
     // Cálculo rápido del costo (misma lógica que checkout)
-    const cfg = typeof ENVIO_CONFIG !== 'undefined'
-      ? ENVIO_CONFIG
-      : { base: 1500, distanciaBase: 1.5, extraPorKm: 500, maximo: 4000 };
+    const cfg =
+      typeof ENVIO_CONFIG !== 'undefined'
+        ? ENVIO_CONFIG
+        : { base: 1500, distanciaBase: 1.5, extraPorKm: 500, maximo: 4000 };
     let costo = cfg.base;
     if (dist > cfg.distanciaBase) costo += (dist - cfg.distanciaBase) * cfg.extraPorKm;
     if (costo > cfg.maximo) costo = cfg.maximo;

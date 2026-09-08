@@ -13,9 +13,9 @@ let myRepId = null;
 let myNombre = 'Repartidor';
 let realtimeCh = null;
 let activeTrip = null;
-let enLinea = false;          // Estado de disponibilidad
-let lastPedidoCount = null;    // Para detectar pedidos nuevos
-let alertTimeout = null;       // Para ocultar la alerta auto
+let enLinea = false; // Estado de disponibilidad
+let lastPedidoCount = null; // Para detectar pedidos nuevos
+let alertTimeout = null; // Para ocultar la alerta auto
 
 // ── Variables GPS ─────────────────────────────
 let gpsChannel = null;
@@ -217,10 +217,7 @@ async function setEnLinea(estado) {
   updateDisponibilidadUI();
   if (!myRepId) return;
   try {
-    await supabase
-      .from('repartidores')
-      .update({ en_linea: estado })
-      .eq('id', myRepId);
+    await supabase.from('repartidores').update({ en_linea: estado }).eq('id', myRepId);
   } catch (e) {
     console.warn('No se pudo actualizar en_linea:', e);
   }
@@ -232,7 +229,7 @@ function triggerNewOrderAlert() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     // Tres bips ascendentes
-    [0, 0.15, 0.30].forEach((delay, i) => {
+    [0, 0.15, 0.3].forEach((delay, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -244,7 +241,9 @@ function triggerNewOrderAlert() {
       osc.start(ctx.currentTime + delay);
       osc.stop(ctx.currentTime + delay + 0.13);
     });
-  } catch { /* silencioso si no soportado */ }
+  } catch {
+    /* silencioso si no soportado */
+  }
 
   // 2) Vibración (patrón: 3 pulsos)
   if (navigator.vibrate) {
@@ -262,7 +261,9 @@ function triggerNewOrderAlert() {
     };
     // Se oculta solo a los 8 segundos si no tocaron
     clearTimeout(alertTimeout);
-    alertTimeout = setTimeout(() => { alerta.style.display = 'none'; }, 8000);
+    alertTimeout = setTimeout(() => {
+      alerta.style.display = 'none';
+    }, 8000);
   }
 
   // 4) Notificación del navegador (si tiene permiso)

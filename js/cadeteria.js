@@ -319,17 +319,21 @@ btnConfirm?.addEventListener('click', async () => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  const userName = session?.user?.user_metadata?.nombre || 'Usuario';
+  const meta = session?.user?.user_metadata || {};
+  const userName =
+    meta.nombre || meta.full_name || meta.name || session?.user?.email?.split('@')[0] || 'Cliente';
   const waNum = typeof WHATSAPP_NUM !== 'undefined' ? WHATSAPP_NUM : '5492604055198';
 
   let msg = '';
 
   if (currentType === 'paquete') {
     const desc = document.getElementById('cad-paquete-desc').value.trim();
+    const destinatario = document.getElementById('cad-paquete-destinatario').value.trim();
     const phone = document.getElementById('cad-paquete-phone').value.trim();
     const terms = document.getElementById('cad-paquete-terms').checked;
 
     if (!desc) return showToast('⚠️ Ingresa qué contiene el paquete.');
+    if (!destinatario) return showToast('⚠️ Ingresá el nombre del destinatario.');
     if (!coordsOrigen || !coordsDestino)
       return showToast('⚠️ Faltan ubicaciones (Punto A y Punto B).');
     if (!terms) return showToast('⚠️ Debes aceptar los términos de seguridad del paquete.');
@@ -346,7 +350,8 @@ btnConfirm?.addEventListener('click', async () => {
       `📦 *ENVÍO DE PAQUETE*\n` +
       `👤 *Cliente:* ${userName}\n` +
       `ℹ️ *Contiene:* ${desc}\n` +
-      (phone ? `📞 *Destinatario:* ${phone}\n` : '') +
+      `👥 *Destinatario:* ${destinatario}\n` +
+      (phone ? `📞 *Tel. Destinatario:* ${phone}\n` : '') +
       `\n📍 *PUNTO A (RETIRO):* https://maps.google.com/?q=${coordsOrigen.lat},${coordsOrigen.lng}\n` +
       `🏁 *PUNTO B (ENTREGA):* https://maps.google.com/?q=${coordsDestino.lat},${coordsDestino.lng}\n` +
       `\n💰 *Total del viaje:* $${fmt(costo)}`;
@@ -355,7 +360,7 @@ btnConfirm?.addEventListener('click', async () => {
     await supabase.from('pedidos').insert({
       cliente_id: session.user.id,
       cliente_nombre: userName,
-      cliente_tel: phone,
+      cliente_tel: phone || null,
       gps_lat: coordsDestino.lat,
       gps_lng: coordsDestino.lng,
       monto_productos: 0,
@@ -367,6 +372,8 @@ btnConfirm?.addEventListener('click', async () => {
         {
           tipo: 'cadeteria_paquete',
           descripcion: desc,
+          destinatario: destinatario,
+          telefono_destinatario: phone || null,
           origen: coordsOrigen,
           destino: coordsDestino,
         },

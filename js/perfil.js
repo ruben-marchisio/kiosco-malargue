@@ -42,6 +42,8 @@ const pedidosList = document.getElementById('pedidos-activos-list');
 
 const btnLoginGoogle = document.getElementById('btn-login-google');
 const btnLoginEmail = document.getElementById('btn-login-email');
+const btnRegisterEmail = document.getElementById('btn-register-email');
+const inputLoginNombre = document.getElementById('login-nombre');
 const inputLoginEmail = document.getElementById('login-email');
 const inputLoginPassword = document.getElementById('login-password');
 const btnLogout = document.getElementById('btn-logout');
@@ -98,7 +100,12 @@ async function showAuthUI() {
   perfilUnauth.style.display = 'none';
   perfilAuth.style.display = 'block';
 
-  perfilNombre.textContent = currentUser.user_metadata?.full_name || 'Usuario';
+  const nombre =
+    currentUser.user_metadata?.nombre ||
+    currentUser.user_metadata?.full_name ||
+    currentUser.user_metadata?.name ||
+    '';
+  perfilNombre.textContent = nombre || currentUser.email || 'Usuario';
   perfilEmail.textContent = currentUser.email || '';
   perfilAvatar.src =
     currentUser.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=U&background=random';
@@ -176,7 +183,10 @@ function renderLocationSection() {
   });
   document.getElementById('btn-loc-dir-buscar')?.addEventListener('click', handleLocDir);
   document.getElementById('perfil-loc-dir-input')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleLocDir(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLocDir();
+    }
   });
   document.getElementById('btn-loc-clear')?.addEventListener('click', () => {
     clearUserLocation();
@@ -207,14 +217,17 @@ function handleLocGps() {
           const { road, house_number, suburb } = data.address;
           label = [road, house_number, suburb].filter(Boolean).join(' ');
         }
-      } catch { /* usar coords como label */ }
+      } catch {
+        /* usar coords como label */
+      }
       saveUserLocation(lat, lng, label);
       renderLocationSection();
       showToast('✅ Ubicación guardada');
     },
     () => {
       if (document.getElementById('perfil-loc-status'))
-        document.getElementById('perfil-loc-status').textContent = '❌ Permiso denegado. Activá el GPS.';
+        document.getElementById('perfil-loc-status').textContent =
+          '❌ Permiso denegado. Activá el GPS.';
     },
     { timeout: 10000, maximumAge: 60000 }
   );
@@ -224,7 +237,10 @@ async function handleLocDir() {
   const input = document.getElementById('perfil-loc-dir-input');
   const status = document.getElementById('perfil-loc-status');
   const texto = input?.value.trim();
-  if (!texto) { if (status) status.textContent = '⚠️ Escribí una dirección.'; return; }
+  if (!texto) {
+    if (status) status.textContent = '⚠️ Escribí una dirección.';
+    return;
+  }
   if (status) status.textContent = '🔍 Buscando...';
   try {
     const query = encodeURIComponent(`${texto}, Malargüe, Mendoza, Argentina`);
@@ -278,6 +294,7 @@ if (btnLoginEmail) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
+      inputLoginNombre.value = '';
       inputLoginEmail.value = '';
       inputLoginPassword.value = '';
       checkSession();
@@ -287,6 +304,48 @@ if (btnLoginEmail) {
       alert('Error al iniciar sesión. Verificá tus datos.');
     } finally {
       btnLoginEmail.textContent = 'Ingresar';
+    }
+  });
+}
+
+if (btnRegisterEmail) {
+  btnRegisterEmail.addEventListener('click', async () => {
+    const nombre = inputLoginNombre?.value.trim();
+    const email = inputLoginEmail.value.trim();
+    const password = inputLoginPassword.value.trim();
+
+    if (!nombre) return showToast('⚠️ Ingresá tu nombre para crear la cuenta');
+    if (!email || !password) return showToast('⚠️ Ingresá correo y contraseña');
+    if (password.length < 6) return showToast('⚠️ La contraseña debe tener al menos 6 caracteres');
+
+    try {
+      btnRegisterEmail.textContent = '⏳...';
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nombre: nombre,
+            full_name: nombre,
+          },
+        },
+      });
+      if (error) throw error;
+
+      inputLoginNombre.value = '';
+      inputLoginEmail.value = '';
+      inputLoginPassword.value = '';
+      showToast('✅ ¡Cuenta creada! Revisá tu correo para confirmar (si aplica).');
+      checkSession();
+    } catch (error) {
+      console.error('Error Registro:', error.message);
+      if (error.message.includes('already registered')) {
+        alert('Ese correo ya tiene una cuenta. Usá el botón Ingresar.');
+      } else {
+        alert('Error al crear la cuenta: ' + error.message);
+      }
+    } finally {
+      btnRegisterEmail.textContent = 'Crear cuenta';
     }
   });
 }

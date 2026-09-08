@@ -106,7 +106,9 @@ async function loadMotasWidget() {
       </span>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px">
-      ${motos.map((m) => `
+      ${motos
+        .map(
+          (m) => `
         <div style="
           display:flex; align-items:center; gap:10px;
           padding:10px 14px;
@@ -125,7 +127,9 @@ async function loadMotasWidget() {
             color: ${m.en_linea ? '#166534' : '#6b7280'};
           ">${m.en_linea ? 'Disponible' : 'Fuera de línea'}</span>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `;
 }

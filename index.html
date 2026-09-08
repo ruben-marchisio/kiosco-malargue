@@ -118,7 +118,22 @@
       <section class="home-stores-section">
         <div class="home-cats-header">
           <h2 class="home-cats-title">🏪 Locales disponibles</h2>
-          <button id="btn-ver-mapa" style="background: none; border: 1.5px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px">
+          <button
+            id="btn-ver-mapa"
+            style="
+              background: none;
+              border: 1.5px solid var(--border);
+              color: var(--text);
+              padding: 6px 12px;
+              border-radius: 20px;
+              font-size: 13px;
+              font-weight: 600;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            "
+          >
             🗺️ Ver mapa
           </button>
         </div>
@@ -175,7 +190,17 @@
           </div>
 
           <div class="cad-field">
-            <label>WhatsApp Destinatario (Opcional)</label>
+            <label>Nombre del destinatario <span style="color: var(--primary); font-weight: 700">*</span></label>
+            <input type="text" id="cad-paquete-destinatario" placeholder="Ej: María González" />
+          </div>
+
+          <div class="cad-field">
+            <label
+              >Teléfono del destinatario
+              <span style="color: var(--text-muted); font-weight: 400; font-size: 12px"
+                >(Opcional — para que el repartidor pueda llamar)</span
+              ></label
+            >
             <input type="tel" id="cad-paquete-phone" placeholder="Ej: 2604 123456" />
           </div>
 
@@ -262,7 +287,19 @@
       </div>
 
       <!-- Banner de envío estimado -->
-      <div id="envio-banner" style="display: none; margin: 0 16px 8px; padding: 10px 14px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; cursor: pointer">
+      <div
+        id="envio-banner"
+        style="
+          display: none;
+          margin: 0 16px 8px;
+          padding: 10px 14px;
+          background: var(--surface);
+          border: 1.5px solid var(--border);
+          border-radius: 12px;
+          font-size: 13px;
+          cursor: pointer;
+        "
+      >
         <span id="envio-banner-text">📍 Guardá tu ubicación para ver el costo de envío</span>
       </div>
 
@@ -330,6 +367,21 @@
 
         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px">
           <input
+            type="text"
+            id="login-nombre"
+            placeholder="Tu nombre (solo para cuenta nueva)"
+            style="
+              padding: 12px;
+              border: 1px solid var(--border);
+              border-radius: var(--radius-sm);
+              font-size: 15px;
+              width: 100%;
+              box-sizing: border-box;
+              background: var(--surface);
+              color: var(--text);
+            "
+          />
+          <input
             type="email"
             id="login-email"
             placeholder="Correo electrónico"
@@ -375,7 +427,22 @@
               cursor: pointer;
             "
           >
-            Ingresar con correo
+            Ingresar
+          </button>
+          <button
+            id="btn-register-email"
+            style="
+              flex: 1;
+              padding: 12px;
+              background: transparent;
+              color: var(--primary);
+              border: 2px solid var(--primary);
+              border-radius: var(--radius-sm);
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            Crear cuenta
           </button>
         </div>
       </div>
@@ -457,8 +524,25 @@
 
         <!-- Sección: Mi Ubicación -->
         <div style="margin-top: 28px">
-          <h3 style="font-size: 16px; margin-bottom: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px">📍 Mi Ubicación</h3>
-          <div style="background: var(--surface); padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04)">
+          <h3
+            style="
+              font-size: 16px;
+              margin-bottom: 14px;
+              color: var(--text-muted);
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+          >
+            📍 Mi Ubicación
+          </h3>
+          <div
+            style="
+              background: var(--surface);
+              padding: 16px;
+              border-radius: 16px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            "
+          >
             <div id="perfil-location-section"></div>
           </div>
         </div>
@@ -809,7 +893,11 @@
     </div>
 
     <!-- ── MAPA DE LOCALES (Radar) ── -->
-    <div id="locales-map-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9998" aria-hidden="true"></div>
+    <div
+      id="locales-map-overlay"
+      style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 9998"
+      aria-hidden="true"
+    ></div>
     <div class="checkout-sheet" id="locales-map-sheet" style="z-index: 9999">
       <div class="sheet-handle"></div>
       <div class="cart-header">
@@ -818,7 +906,16 @@
       </div>
       <div class="checkout-body" style="padding: 0; display: flex; flex-direction: column">
         <div id="locales-map" style="height: 420px; width: 100%; z-index: 1"></div>
-        <div style="padding: 12px 16px; font-size: 12px; color: var(--text-muted); display: flex; gap: 16px; flex-wrap: wrap">
+        <div
+          style="
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+          "
+        >
           <span>🟢 Abierto — tocá para ir</span>
           <span>🔴 Cerrado</span>
           <span>📍 Tu ubicación</span>

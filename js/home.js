@@ -351,7 +351,7 @@ function buildLocalesMap(stores) {
   }
 
   // Centro por defecto: Malargüe
-  localesMapInstance = L.map('locales-map').setView([-35.4950, -69.5840], 14);
+  localesMapInstance = L.map('locales-map').setView([-35.495, -69.584], 14);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO',
   }).addTo(localesMapInstance);
@@ -443,4 +443,3 @@ function buildLocalesMap(stores) {
     if (store && store.abierto !== false) handleStoreSelect(store);
   });
 }
-
