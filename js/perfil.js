@@ -42,8 +42,7 @@ const pedidosList = document.getElementById('pedidos-activos-list');
 
 const btnLoginGoogle = document.getElementById('btn-login-google');
 const btnLoginEmail = document.getElementById('btn-login-email');
-const btnRegisterEmail = document.getElementById('btn-register-email');
-const inputLoginNombre = document.getElementById('login-nombre');
+const btnShowEmailLogin = document.getElementById('btn-show-email-login');
 const inputLoginEmail = document.getElementById('login-email');
 const inputLoginPassword = document.getElementById('login-password');
 const btnLogout = document.getElementById('btn-logout');
@@ -283,6 +282,14 @@ if (btnLoginGoogle) {
   });
 }
 
+// Toggle del panel de login por email (solo para motos/locales)
+if (btnShowEmailLogin) {
+  btnShowEmailLogin.addEventListener('click', () => {
+    const panel = document.getElementById('email-login-panel');
+    if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+}
+
 if (btnLoginEmail) {
   btnLoginEmail.addEventListener('click', async () => {
     const email = inputLoginEmail.value.trim();
@@ -294,7 +301,6 @@ if (btnLoginEmail) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      inputLoginNombre.value = '';
       inputLoginEmail.value = '';
       inputLoginPassword.value = '';
       checkSession();
@@ -304,48 +310,6 @@ if (btnLoginEmail) {
       alert('Error al iniciar sesión. Verificá tus datos.');
     } finally {
       btnLoginEmail.textContent = 'Ingresar';
-    }
-  });
-}
-
-if (btnRegisterEmail) {
-  btnRegisterEmail.addEventListener('click', async () => {
-    const nombre = inputLoginNombre?.value.trim();
-    const email = inputLoginEmail.value.trim();
-    const password = inputLoginPassword.value.trim();
-
-    if (!nombre) return showToast('⚠️ Ingresá tu nombre para crear la cuenta');
-    if (!email || !password) return showToast('⚠️ Ingresá correo y contraseña');
-    if (password.length < 6) return showToast('⚠️ La contraseña debe tener al menos 6 caracteres');
-
-    try {
-      btnRegisterEmail.textContent = '⏳...';
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nombre: nombre,
-            full_name: nombre,
-          },
-        },
-      });
-      if (error) throw error;
-
-      inputLoginNombre.value = '';
-      inputLoginEmail.value = '';
-      inputLoginPassword.value = '';
-      showToast('✅ ¡Cuenta creada! Revisá tu correo para confirmar (si aplica).');
-      checkSession();
-    } catch (error) {
-      console.error('Error Registro:', error.message);
-      if (error.message.includes('already registered')) {
-        alert('Ese correo ya tiene una cuenta. Usá el botón Ingresar.');
-      } else {
-        alert('Error al crear la cuenta: ' + error.message);
-      }
-    } finally {
-      btnRegisterEmail.textContent = 'Crear cuenta';
     }
   });
 }

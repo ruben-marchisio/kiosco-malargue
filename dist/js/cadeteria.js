@@ -64,6 +64,14 @@ btnOpenCadeteria?.addEventListener('click', async () => {
   cadeteriaView.style.display = 'block';
   window.scrollTo(0, 0);
   updateCostSummary();
+
+  // Pre-rellenar el nombre del remitente desde Google (o metadata guardada)
+  const remitenteInput = document.getElementById('cad-remitente-nombre');
+  if (remitenteInput && !remitenteInput.value) {
+    const meta = session.user.user_metadata || {};
+    const nombre = meta.nombre || meta.full_name || meta.name || '';
+    if (nombre) remitenteInput.value = nombre;
+  }
 });
 
 btnBack?.addEventListener('click', () => {
@@ -320,11 +328,21 @@ btnConfirm?.addEventListener('click', async () => {
     data: { session },
   } = await supabase.auth.getSession();
   const meta = session?.user?.user_metadata || {};
+  // El nombre lo tomamos del campo del formulario (pre-rellenado desde Google, editable por el usuario)
+  const remitenteInput = document.getElementById('cad-remitente-nombre');
   const userName =
-    meta.nombre || meta.full_name || meta.name || session?.user?.email?.split('@')[0] || 'Cliente';
+    remitenteInput?.value.trim() ||
+    meta.nombre ||
+    meta.full_name ||
+    meta.name ||
+    session?.user?.email?.split('@')[0] ||
+    'Cliente';
   const waNum = typeof WHATSAPP_NUM !== 'undefined' ? WHATSAPP_NUM : '5492604055198';
 
   let msg = '';
+
+  if (remitenteInput && !remitenteInput.value.trim())
+    return showToast('⚠️ Ingresá tu nombre antes de continuar.');
 
   if (currentType === 'paquete') {
     const desc = document.getElementById('cad-paquete-desc').value.trim();

@@ -169,6 +169,14 @@
         <!-- Formulario Envío de Paquete -->
         <div class="cad-form" id="form-paquete">
           <div class="cad-field">
+            <label>Tu nombre <span style="color: var(--primary); font-weight: 700">*</span></label>
+            <input type="text" id="cad-remitente-nombre" placeholder="Ej: Pepe García" autocomplete="name" />
+            <span class="cad-loc-hint" style="font-size: 11px"
+              >Se completa automáticamente con tu cuenta de Google</span
+            >
+          </div>
+
+          <div class="cad-field">
             <label>¿Qué enviamos?</label>
             <input type="text" id="cad-paquete-desc" placeholder="Ej: Unas llaves, una caja pequeña..." />
           </div>
@@ -359,65 +367,64 @@
           Continuar con Google
         </button>
 
-        <div style="display: flex; align-items: center; margin: 16px 0; color: var(--text-muted); font-size: 14px">
-          <div style="flex: 1; height: 1px; background: var(--border)"></div>
-          <span style="padding: 0 10px">o con correo</span>
-          <div style="flex: 1; height: 1px; background: var(--border)"></div>
+        <div style="text-align: center; margin-top: 20px">
+          <button
+            id="btn-show-email-login"
+            style="
+              background: none;
+              border: none;
+              color: var(--text-muted);
+              font-size: 12px;
+              cursor: pointer;
+              text-decoration: underline;
+              padding: 0;
+            "
+          >
+            Soy repartidor o local &#8594; Ingresar con correo
+          </button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px">
-          <input
-            type="text"
-            id="login-nombre"
-            placeholder="Tu nombre (solo para cuenta nueva)"
-            style="
-              padding: 12px;
-              border: 1px solid var(--border);
-              border-radius: var(--radius-sm);
-              font-size: 15px;
-              width: 100%;
-              box-sizing: border-box;
-              background: var(--surface);
-              color: var(--text);
-            "
-          />
-          <input
-            type="email"
-            id="login-email"
-            placeholder="Correo electrónico"
-            style="
-              padding: 12px;
-              border: 1px solid var(--border);
-              border-radius: var(--radius-sm);
-              font-size: 15px;
-              width: 100%;
-              box-sizing: border-box;
-              background: var(--surface);
-              color: var(--text);
-            "
-          />
-          <input
-            type="password"
-            id="login-password"
-            placeholder="Contraseña"
-            style="
-              padding: 12px;
-              border: 1px solid var(--border);
-              border-radius: var(--radius-sm);
-              font-size: 15px;
-              width: 100%;
-              box-sizing: border-box;
-              background: var(--surface);
-              color: var(--text);
-            "
-          />
-        </div>
-
-        <div style="display: flex; gap: 10px">
+        <!-- Login email oculto: solo para motos y locales -->
+        <div id="email-login-panel" style="display: none; margin-top: 16px">
+          <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 12px">
+            🛵 Acceso exclusivo para repartidores y locales adheridos.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px">
+            <input
+              type="email"
+              id="login-email"
+              placeholder="Correo electrónico"
+              style="
+                padding: 12px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                font-size: 15px;
+                width: 100%;
+                box-sizing: border-box;
+                background: var(--surface);
+                color: var(--text);
+              "
+            />
+            <input
+              type="password"
+              id="login-password"
+              placeholder="Contraseña"
+              style="
+                padding: 12px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                font-size: 15px;
+                width: 100%;
+                box-sizing: border-box;
+                background: var(--surface);
+                color: var(--text);
+              "
+            />
+          </div>
           <button
             id="btn-login-email"
             style="
-              flex: 1;
+              width: 100%;
               padding: 12px;
               background: var(--primary);
               color: white;
@@ -428,21 +435,6 @@
             "
           >
             Ingresar
-          </button>
-          <button
-            id="btn-register-email"
-            style="
-              flex: 1;
-              padding: 12px;
-              background: transparent;
-              color: var(--primary);
-              border: 2px solid var(--primary);
-              border-radius: var(--radius-sm);
-              font-weight: 600;
-              cursor: pointer;
-            "
-          >
-            Crear cuenta
           </button>
         </div>
       </div>
