@@ -1,4 +1,4 @@
-/* global L, ENVIO_CONFIG, CADETERIA_LOCAL_COORDS */
+/* global L, ENVIO_CONFIG, CADETERIA_LOCAL_COORDS, CADETERIA_LOCAL_ID */
 import { supabase } from './api.js';
 import { calculateDistance } from './checkout.js';
 import { fmt, showToast } from './utils.js';

@@ -324,41 +324,57 @@
         <span>←</span> Ver locales
       </button>
 
-      <!-- Search bar -->
-      <div class="search-wrap">
-        <div class="search-bar" id="search-bar-trigger" role="button" aria-label="Buscar productos">
-          <span class="search-icon">🔍</span>
-          <span style="flex: 1; color: var(--text-muted); font-size: 14px">Buscar productos...</span>
+      <!-- ── PANTALLA DE CATEGORÍAS (landing) ── -->
+      <div id="cat-landing" style="display: none">
+        <div class="cat-landing-header">
+          <p class="cat-landing-subtitle">¿Qué estás buscando?</p>
         </div>
+        <div class="cat-landing-grid" id="cat-landing-grid"></div>
       </div>
 
-      <!-- Categorías horizontales -->
-      <div class="categories">
-        <div class="cat-scroll" id="cat-scroll"></div>
-      </div>
+      <!-- ── VISTA DE GRILLA DE PRODUCTOS ── -->
+      <div id="products-grid-view" style="display: none">
+        <!-- Botón volver a categorías -->
+        <button class="back-to-cats-bar" id="back-to-cats" aria-label="Volver a categorías">
+          <span>←</span> Categorías
+        </button>
 
-      <!-- Banner de envío estimado -->
-      <div
-        id="envio-banner"
-        style="
-          display: none;
-          margin: 0 16px 8px;
-          padding: 10px 14px;
-          background: var(--surface);
-          border: 1.5px solid var(--border);
-          border-radius: 12px;
-          font-size: 13px;
-          cursor: pointer;
-        "
-      >
-        <span id="envio-banner-text">📍 Guardá tu ubicación para ver el costo de envío</span>
-      </div>
+        <!-- Search bar -->
+        <div class="search-wrap">
+          <div class="search-bar" id="search-bar-trigger" role="button" aria-label="Buscar productos">
+            <span class="search-icon">🔍</span>
+            <span style="flex: 1; color: var(--text-muted); font-size: 14px">Buscar productos...</span>
+          </div>
+        </div>
 
-      <!-- Grilla de productos -->
-      <main class="products-section">
-        <h2 class="section-title" id="section-title">🛍️ Todos los productos</h2>
-        <div class="products-grid" id="products-grid"></div>
-      </main>
+        <!-- Categorías horizontales -->
+        <div class="categories">
+          <div class="cat-scroll" id="cat-scroll"></div>
+        </div>
+
+        <!-- Banner de envío estimado -->
+        <div
+          id="envio-banner"
+          style="
+            display: none;
+            margin: 0 16px 8px;
+            padding: 10px 14px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+            cursor: pointer;
+          "
+        >
+          <span id="envio-banner-text">📍 Guardá tu ubicación para ver el costo de envío</span>
+        </div>
+
+        <!-- Grilla de productos -->
+        <main class="products-section">
+          <h2 class="section-title" id="section-title">🛍️ Todos los productos</h2>
+          <div class="products-grid" id="products-grid"></div>
+        </main>
+      </div>
     </div>
 
     <!-- ── PERFIL / MIS PEDIDOS VIEW ── -->

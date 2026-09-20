@@ -54,6 +54,28 @@ export const CAT_EMOJI = {
 const gridEl = document.getElementById('products-grid');
 const catScroll = document.getElementById('cat-scroll');
 const sectionTitle = document.getElementById('section-title');
+const catLanding = document.getElementById('cat-landing');
+const catLandingGrid = document.getElementById('cat-landing-grid');
+const productsGridView = document.getElementById('products-grid-view');
+
+// ── Colores de fondo por categoría ────────────
+const CAT_COLORS = {
+  todo: { bg: 'linear-gradient(135deg, #ff6b35 0%, #e8521a 100%)', text: '#fff' },
+  combos: { bg: 'linear-gradient(135deg, #ff6b35 0%, #ff4500 100%)', text: '#fff' },
+  bebidas: { bg: 'linear-gradient(135deg, #3b9eff 0%, #1a6fcc 100%)', text: '#fff' },
+  alcohol: { bg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', text: '#fff' },
+  snacks: { bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', text: '#fff' },
+  comidas: { bg: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', text: '#fff' },
+  panaderia: { bg: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)', text: '#fff' },
+  almacen: { bg: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', text: '#fff' },
+  verduleria: { bg: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)', text: '#fff' },
+  limpieza: { bg: 'linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)', text: '#fff' },
+  higiene: { bg: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', text: '#fff' },
+  cigarrillos: { bg: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)', text: '#fff' },
+  mascota: { bg: 'linear-gradient(135deg, #84cc16 0%, #4d7c0f 100%)', text: '#fff' },
+  libreria: { bg: 'linear-gradient(135deg, #f43f5e 0%, #9f1239 100%)', text: '#fff' },
+  otros: { bg: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)', text: '#fff' },
+};
 
 // ── Categorías ────────────────────────────────
 export function initCategories() {
@@ -73,9 +95,30 @@ export function selectCategory(id, label) {
     .querySelectorAll('.cat-btn')
     .forEach((b) => b.classList.toggle('active', b.dataset.cat === id));
   sectionTitle.textContent = id === 'todo' ? '🛍️ Todos los productos' : label;
+
+  // Ocultar landing y mostrar grilla
+  if (catLanding) catLanding.style.display = 'none';
+  if (productsGridView) productsGridView.style.display = 'block';
+
   renderProducts();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ── Volver a pantalla de categorías ────────────
+export function showCategoryLanding() {
+  if (productsGridView) productsGridView.style.display = 'none';
+  if (catLanding) {
+    catLanding.style.display = 'block';
+    // Resetear la animación
+    catLanding.classList.remove('cat-landing-visible');
+    void catLanding.offsetWidth; // reflow
+    catLanding.classList.add('cat-landing-visible');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Listener del botón "← Categorías"
+document.getElementById('back-to-cats')?.addEventListener('click', showCategoryLanding);
 
 // ── Carga ──────────────────────────────
 function updateEnvioBanner() {
@@ -190,7 +233,62 @@ async function loadProductsForStore(comercioId) {
   updateCategoriesForStore(state.allProducts);
   // Mostrar el header con info del comercio
   updateStoreHeader(selectedStore);
-  renderProducts();
+  // Mostrar la pantalla de categorías como paso inicial
+  showCategorySelection(state.allProducts);
+}
+
+// ── Pantalla de selección de categorías ────────────────────────
+export function showCategorySelection(products) {
+  if (!catLandingGrid || !catLanding) {
+    renderProducts();
+    return;
+  }
+
+  // Contar productos por categoría
+  const counts = {};
+  (products || state.allProducts).forEach((p) => {
+    if (!counts[p.categoria]) counts[p.categoria] = 0;
+    counts[p.categoria]++;
+  });
+
+  // Filtrar categorías que tienen productos
+  const presentCats = CATS.filter((c) => c.id === 'todo' || counts[c.id] > 0);
+  const total = (products || state.allProducts).length;
+
+  catLandingGrid.innerHTML = presentCats
+    .map((cat) => {
+      const count = cat.id === 'todo' ? total : counts[cat.id];
+      const colors = CAT_COLORS[cat.id] || CAT_COLORS.otros;
+      const isFeatured = cat.featured ? 'cat-card--featured' : '';
+      return `
+        <button
+          class="cat-card ${isFeatured}"
+          data-cat="${cat.id}"
+          style="background: ${colors.bg}; color: ${colors.text};"
+          aria-label="Ver ${cat.label}"
+        >
+          <span class="cat-card-emoji">${cat.emoji}</span>
+          <span class="cat-card-label">${cat.label}</span>
+          <span class="cat-card-count">${count} producto${count !== 1 ? 's' : ''}</span>
+        </button>`;
+    })
+    .join('');
+
+  // Eventos de click en tarjetas
+  catLandingGrid.querySelectorAll('.cat-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const catId = card.dataset.cat;
+      const cat = CATS.find((c) => c.id === catId);
+      if (cat) selectCategory(cat.id, `${cat.emoji} ${cat.label}`);
+    });
+  });
+
+  // Ocultar grilla, mostrar landing con animación
+  if (productsGridView) productsGridView.style.display = 'none';
+  catLanding.style.display = 'block';
+  catLanding.classList.remove('cat-landing-visible');
+  void catLanding.offsetWidth; // reflow para animar
+  catLanding.classList.add('cat-landing-visible');
 }
 
 // ── Actualizar categorías visibles para el comercio ───────────
