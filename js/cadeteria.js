@@ -2,7 +2,7 @@
 import { supabase } from './api.js';
 import { calculateDistance } from './checkout.js';
 import { fmt, showToast } from './utils.js';
-import { navToCadeteria } from './navigation.js';
+import { navToCadeteria, navPopOnClose } from './navigation.js';
 
 // DOM Elements - Views & Entry
 const homeView = document.getElementById('home-view');
@@ -89,6 +89,7 @@ btnOpenCadeteria?.addEventListener('click', async () => {
 });
 
 btnBack?.addEventListener('click', () => {
+  navPopOnClose();
   cadeteriaView.style.display = 'none';
   homeView.style.display = 'block';
 });

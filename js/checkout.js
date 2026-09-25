@@ -12,7 +12,7 @@ import { isStoreClosed, showClosedModal, storeStatus } from './store-status.js';
 import { supabase } from './api.js';
 import { patchStockInCache } from './cache.js';
 import { selectedStore, loadStores } from './stores.js';
-import { navOpenCheckout } from './navigation.js';
+import { navOpenCheckout, navPopOnClose } from './navigation.js';
 
 // comercio_id activo: usa el comercio seleccionado en el marketplace,
 // o como fallback busca el primero activo (para El Pechito si no hay selección)
@@ -460,5 +460,8 @@ async function submitOrder() {
 
 // ── Eventos ───────────────────────────────────────────
 document.getElementById('checkout-confirm').addEventListener('click', submitOrder);
-document.getElementById('close-checkout').addEventListener('click', closeCheckout);
+document.getElementById('close-checkout').addEventListener('click', () => {
+  navPopOnClose();
+  closeCheckout();
+});
 document.getElementById('whatsapp-btn').addEventListener('click', openCheckout);

@@ -12,7 +12,13 @@ import { loadProducts, initCategories, renderProducts } from './products.js';
 import { initHomeView, showHomeView } from './home.js';
 import { showPerfilView } from './perfil.js';
 import { showToast } from './utils.js';
-import { initNavigation, navOpenCart, navOpenSearch } from './navigation.js';
+import {
+  initNavigation,
+  navOpenCart,
+  navOpenSearch,
+  navOpenPerfil,
+  navPopOnClose,
+} from './navigation.js';
 
 // ── Eventos CustomEvent (products → cart) ─────
 // products.js dispara estos eventos para evitar imports circulares
@@ -47,6 +53,7 @@ document.getElementById('nav-cart').addEventListener('click', () => {
   openCart();
 });
 document.getElementById('nav-perfil')?.addEventListener('click', () => {
+  navOpenPerfil();
   showPerfilView();
 });
 
@@ -55,15 +62,23 @@ document.getElementById('search-bar-trigger').addEventListener('click', () => {
   navOpenSearch();
   openSearch();
 });
-document.getElementById('search-cancel').addEventListener('click', closeSearch);
-document.getElementById('close-cart').addEventListener('click', closeCart);
+document.getElementById('search-cancel').addEventListener('click', () => {
+  navPopOnClose();
+  closeSearch();
+});
+document.getElementById('close-cart').addEventListener('click', () => {
+  navPopOnClose();
+  closeCart();
+});
 document.getElementById('back-to-home').addEventListener('click', () => {
+  navPopOnClose();
   closeCart();
   closeSearch();
   document.getElementById('perfil-view').style.display = 'none';
   showHomeView();
 });
 overlay.addEventListener('click', () => {
+  navPopOnClose();
   closeCart();
   closeSearch();
   closeCheckout();

@@ -12,7 +12,7 @@ import { initFromConfig } from './store-status.js';
 import { selectedStore, RUBRO_EMOJI } from './stores.js';
 import { getUserLocation } from './perfil.js';
 import { calculateDistance } from './checkout.js';
-import { navToProducts } from './navigation.js';
+import { navToProducts, navPopOnClose } from './navigation.js';
 
 // ── Constantes ────────────────────────────────
 // ⚠️ Estas categorías deben mantenerse sincronizadas con VALID_CATS en admin/js/stock.js
@@ -120,7 +120,10 @@ export function showCategoryLanding() {
 }
 
 // Listener del botón "← Categorías"
-document.getElementById('back-to-cats')?.addEventListener('click', showCategoryLanding);
+document.getElementById('back-to-cats')?.addEventListener('click', () => {
+  navPopOnClose();
+  showCategoryLanding();
+});
 
 // ── Carga ──────────────────────────────
 function updateEnvioBanner() {

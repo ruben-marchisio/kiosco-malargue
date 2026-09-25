@@ -5,7 +5,12 @@
 
    Jerarquía de vistas:
    home → cat-landing → products-grid-view
-   (+ overlays: cart-sheet, checkout-sheet, cadeteria, map)
+   (+ overlays: cart-sheet, checkout-sheet, cadeteria, map, search, perfil)
+
+   CLAVE: separamos dos conceptos:
+   - navGoTo()  → el usuario navegó HACIA adelante   → pushState
+   - navGoBack()→ el usuario cerró algo con la UI    → history.back() para sincronizar
+   - handleBack → intercepta el botón físico         → cierra la vista activa
    ============================================= */
 /* global history, location */
 
@@ -18,6 +23,7 @@ import { showCategoryLanding } from './products.js';
 // ── Identificadores de estado ─────────────────
 export const NAV = {
   HOME: 'home',
+  PERFIL: 'perfil',
   CAT_LANDING: 'cat',
   PRODUCTS: 'products',
   CADETERIA: 'cadeteria',
@@ -27,18 +33,28 @@ export const NAV = {
   SEARCH: 'search',
 };
 
+// ── Estado actual de la app ───────────────────
+// Rastreamos qué pantalla está abierta AHORA para saber qué cerrar al presionar atrás.
+let _currentNav = NAV.HOME;
+
 // ── Helpers internos ──────────────────────────
 function pushNav(navState) {
+  _currentNav = navState;
   history.pushState({ nav: navState }, '', location.pathname);
 }
 
 function replaceNav(navState) {
+  _currentNav = navState;
   history.replaceState({ nav: navState }, '', location.pathname);
 }
 
-// ── API pública ───────────────────────────────
+// ── API pública — ir HACIA ADELANTE ──────────
+// Llamar cuando el usuario abre una nueva sección
 export function navToHome() {
   replaceNav(NAV.HOME);
+}
+export function navOpenPerfil() {
+  pushNav(NAV.PERFIL);
 }
 export function navToCatLanding() {
   pushNav(NAV.CAT_LANDING);
@@ -62,16 +78,48 @@ export function navOpenMap() {
   pushNav(NAV.MAP);
 }
 
-// ── Lógica de retroceso ───────────────────────
-function handleBack(event) {
-  const navState = event.state?.nav ?? NAV.HOME;
+// ── API pública — cerrar desde la UI de la app ─
+// Cuando el usuario cierra algo usando los botones de la interfaz (✕, overlay, etc.)
+// hay que consumir el estado del historial para mantenerlo sincronizado.
+// Esto hace que el botón de atrás NO duplique el cierre.
+export function navPopOnClose() {
+  if (_currentNav !== NAV.HOME) {
+    _currentNav = NAV.HOME; // temporal: handleBack actualizará correctamente
+    history.back();
+  }
+}
 
-  switch (navState) {
+// ── Lógica de retroceso ───────────────────────
+// Se dispara cuando el usuario presiona el botón físico de atrás del teléfono.
+// "closingState" = lo que estaba abierto antes → lo que hay que cerrar.
+let _handling = false; // evitar doble disparo
+
+function handleBack(event) {
+  if (_handling) return;
+
+  const closingState = _currentNav;
+  // Actualizamos a dónde llegó el navegador
+  _currentNav = event.state?.nav ?? NAV.HOME;
+
+  _handling = true;
+
+  switch (closingState) {
     case NAV.HOME:
-      // No hay nada más atrás dentro de la app; dejar que el navegador actúe.
+      // Estamos en el home → no hay nada que cerrar dentro de la app.
+      _handling = false;
       return;
 
+    case NAV.PERFIL:
+      // Perfil abierto → ocultarlo y volver al home
+      document.getElementById('perfil-view').style.display = 'none';
+      document.getElementById('home-view').style.display = 'block';
+      document.getElementById('nav-home')?.classList.add('active');
+      document.getElementById('nav-perfil')?.classList.remove('active');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      break;
+
     case NAV.CAT_LANDING:
+      // Landing de categorías → volver al home (lista de locales)
       closeCart();
       closeSearch();
       document.getElementById('perfil-view').style.display = 'none';
@@ -80,23 +128,28 @@ function handleBack(event) {
       break;
 
     case NAV.PRODUCTS:
+      // Grilla de productos → volver a categorías
       showCategoryLanding();
       break;
 
     case NAV.CADETERIA:
+      // Cadetería → volver al home
       document.getElementById('cadeteria-view').style.display = 'none';
       showHomeView();
       break;
 
     case NAV.CART:
+      // Carrito abierto → cerrarlo (sin tocar el historial, ya retrocedimos)
       closeCart();
       break;
 
     case NAV.CHECKOUT:
+      // Checkout abierto → cerrarlo
       closeCheckout();
       break;
 
     case NAV.MAP: {
+      // Mapa de locales → cerrarlo
       const mapSheet = document.getElementById('locales-map-sheet');
       const mapOverlay = document.getElementById('locales-map-overlay');
       if (mapSheet) mapSheet.classList.remove('open');
@@ -106,12 +159,15 @@ function handleBack(event) {
     }
 
     case NAV.SEARCH:
+      // Buscador → cerrarlo
       closeSearch();
       break;
 
     default:
       break;
   }
+
+  _handling = false;
 }
 
 // ── Inicialización ────────────────────────────
