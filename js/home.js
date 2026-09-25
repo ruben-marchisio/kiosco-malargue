@@ -16,6 +16,7 @@ import { state, saveCart } from './state.js';
 import { updateBadge } from './cart.js';
 import { getUserLocation } from './perfil.js';
 import { calculateDistance } from './checkout.js';
+import { navToHome, navToCatLanding, navOpenMap } from './navigation.js';
 
 /* global L */
 
@@ -30,6 +31,7 @@ export function showHomeView() {
   document.getElementById('nav-home')?.classList.add('active');
   document.getElementById('nav-search')?.classList.remove('active');
   document.getElementById('nav-cart')?.classList.remove('active');
+  navToHome();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -271,6 +273,7 @@ function handleStoreSelect(store) {
 
   selectStore(store);
   // products.js escucha el evento 'kiosco:storeSelected' y carga los productos
+  navToCatLanding(); // registrar en el historial antes de mostrar la vista
   showProductsView();
 }
 
@@ -327,6 +330,7 @@ function initLocalesMapButton(stores) {
 
   function openMap() {
     if (!mapSheet) return;
+    navOpenMap(); // registrar en el historial
     mapSheet.classList.add('open');
     if (overlay) overlay.style.display = 'block';
     document.body.style.overflow = 'hidden';

@@ -12,6 +12,7 @@ import { isStoreClosed, showClosedModal, storeStatus } from './store-status.js';
 import { supabase } from './api.js';
 import { patchStockInCache } from './cache.js';
 import { selectedStore, loadStores } from './stores.js';
+import { navOpenCheckout } from './navigation.js';
 
 // comercio_id activo: usa el comercio seleccionado en el marketplace,
 // o como fallback busca el primero activo (para El Pechito si no hay selección)
@@ -223,6 +224,7 @@ export function openCheckout() {
   checkoutSheet.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+  navOpenCheckout(); // registrar en el historial
   setTimeout(() => {
     if (!nameInput.value) nameInput.focus();
     else if (!addrInput.value) addrInput.focus();

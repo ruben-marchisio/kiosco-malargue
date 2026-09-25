@@ -5,6 +5,7 @@
 import { state, saveCart } from './state.js';
 import { fmt, setNavActive } from './utils.js';
 import { CAT_EMOJI, renderProducts } from './products.js';
+import { navOpenCart } from './navigation.js';
 
 // ── DOM refs ──────────────────────────────────
 const navBadge = document.getElementById('nav-badge');
@@ -119,6 +120,7 @@ export function changeQty(id, delta) {
 // ── Cart Sheet ────────────────────────────────
 export function openCart() {
   renderCart();
+  navOpenCart(); // registrar en el historial
   cartSheet.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';

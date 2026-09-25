@@ -12,6 +12,7 @@ import { loadProducts, initCategories, renderProducts } from './products.js';
 import { initHomeView, showHomeView } from './home.js';
 import { showPerfilView } from './perfil.js';
 import { showToast } from './utils.js';
+import { initNavigation, navOpenCart, navOpenSearch } from './navigation.js';
 
 // ── Eventos CustomEvent (products → cart) ─────
 // products.js dispara estos eventos para evitar imports circulares
@@ -36,11 +37,13 @@ document.getElementById('nav-home').addEventListener('click', () => {
 document.getElementById('nav-search').addEventListener('click', () => {
   closeCart();
   document.getElementById('perfil-view').style.display = 'none';
+  navOpenSearch();
   openSearch();
 });
 document.getElementById('nav-cart').addEventListener('click', () => {
   closeSearch();
   document.getElementById('perfil-view').style.display = 'none';
+  navOpenCart();
   openCart();
 });
 document.getElementById('nav-perfil')?.addEventListener('click', () => {
@@ -48,7 +51,10 @@ document.getElementById('nav-perfil')?.addEventListener('click', () => {
 });
 
 // ── Otros triggers ────────────────────────────
-document.getElementById('search-bar-trigger').addEventListener('click', openSearch);
+document.getElementById('search-bar-trigger').addEventListener('click', () => {
+  navOpenSearch();
+  openSearch();
+});
 document.getElementById('search-cancel').addEventListener('click', closeSearch);
 document.getElementById('close-cart').addEventListener('click', closeCart);
 document.getElementById('back-to-home').addEventListener('click', () => {
@@ -128,6 +134,7 @@ document.getElementById('share-btn').addEventListener('click', async () => {
 });
 
 // ── Inicialización ────────────────────────────
+initNavigation(); // interceptar botón físico de atrás del celular
 initCategories();
 updateBadge();
 loadProducts(); // consulta config_negocio → initFromConfig → badge + modal + listeners

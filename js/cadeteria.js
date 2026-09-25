@@ -2,6 +2,7 @@
 import { supabase } from './api.js';
 import { calculateDistance } from './checkout.js';
 import { fmt, showToast } from './utils.js';
+import { navToCadeteria } from './navigation.js';
 
 // DOM Elements - Views & Entry
 const homeView = document.getElementById('home-view');
@@ -62,6 +63,7 @@ btnOpenCadeteria?.addEventListener('click', async () => {
 
   homeView.style.display = 'none';
   cadeteriaView.style.display = 'block';
+  navToCadeteria(); // registrar en el historial
   window.scrollTo(0, 0);
   updateCostSummary();
 
